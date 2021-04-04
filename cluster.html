@@ -19,14 +19,38 @@ var svg = d3.select("#main")
 var data = []
 d3.csv("oscar_nominees_with_race.csv", function(csv_data) {
     for (var i = 0; i < csv_data.length; i++) {
-        if (csv_data[i].winner === "TRUE") {
-           data.push(csv_data[i])
-        }
+        // push all datapoints, both nominees and winners
+        data.push(csv_data[i])
     }
 
 
 
 color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.race));
+
+var numDataPoints = data.length;
+var nomineeData = data.filter(d => d.winner === "FALSE");
+var numNominees = nomineeData.length;
+
+var winnerData = data.filter(d => d.winner === "TRUE");
+var numWinners = winnerData.length;
+
+let numNomineesSeen = 0;
+let numWinnersSeen = 0;
+// we position the winners/nominees in a 1 layer ring, and the physics
+// simulation will take care of repelling the overlaps
+let nomineeRadius = 350;
+for (let i = 0; i < numDataPoints; i++) {
+  // if we're looking at a nominee
+  if (data[i].winner === "FALSE") {
+    // calculate angle of the dot
+    var theta = numNomineesSeen * 2 * Math.PI / numNominees
+    // calculate coordinates relative to center of canvas
+    data[i].x = nomineeRadius * Math.cos(theta) + width / 2;
+    data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
+
+    numNomineesSeen += 1;
+  }
+}
 
 var node = svg.append("g")
   .selectAll("circle")
@@ -41,14 +65,26 @@ var node = svg.append("g")
     .attr("stroke", d => color(d.race))
     .style("stroke-width", 4)
 
-
-var simulation = d3.forceSimulation()
+var simulationCircle = d3.forceSimulation()
     .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
-    .force("charge", d3.forceManyBody().strength(0.5)) // Nodes are attracted one each other of value is > 0
-    .force("collide", d3.forceCollide().strength(1).radius(2).iterations(1)) // Force that avoids circle overlapping
+    .force("charge", d3.forceManyBody().strength(0.4)) // Nodes are attracted one each other of value is > 0
+    .force("collide", d3.forceCollide().strength(2.2).radius(7).iterations(2)) // Force that avoids circle overlapping
 
-simulation
-    .nodes(data)
+simulationCircle
+    .nodes(winnerData)
+    .on("tick", function(d){
+      node
+          .attr("cx", function(d){ return d.x; })
+          .attr("cy", function(d){ return d.y; })
+    });
+
+var simulationRing = d3.forceSimulation()
+    .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
+    .force("charge", d3.forceManyBody().strength(0)) // Nodes are attracted one each other of value is > 0
+    .force("collide", d3.forceCollide().strength(0.2).radius(6).iterations(1)) // Force that avoids circle overlapping
+
+simulationRing
+    .nodes(nomineeData)
     .on("tick", function(d){
       node
           .attr("cx", function(d){ return d.x; })
