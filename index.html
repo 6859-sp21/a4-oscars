@@ -1,14 +1,184 @@
-<html>
-  <head></head>
-  <body>
-  <h1>6.859: D3 basics</h1>
+<!DOCTYPE html>
+<meta charset="utf-8">
+<head>
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.13.0/d3-legend.js"></script>
+  <link href='https://fonts.googleapis.com/css?family=Didact Gothic' rel='stylesheet'>
 
-  <ol>
-    <li><a href="./svg.html">SVGs</a></li>
-    <li><a href="./simplescatter.html">Simple scatter chart</a></li>
-    <li><a href="./simplescatterwithcircle.html">Simple scatter chart with SVG circle</a></li>
-    <li><a href="./advancedscatter.html">Advanced scatter chart</a></li>
-    <li><a href="./cluster.html"> Circle clustering for winners</a></li>
-  </ol>
+  <style type="text/css">
+    h1 { 
+      color: 	#b8a22a; 
+      font-family: 'Didact Gothic', sans-serif; 
+      font-size: 80px;
+      line-height: 1; 
+      margin-left: 40px;
+      margin-top: 20px;
+      margin-bottom: 5px;
+      text-align: left; 
+    }
+
+    h2 {
+      color: 	#b8a22a; 
+      font-family: 'Didact Gothic', sans-serif;
+      line-height: 1; 
+      margin-left: 45px;
+      text-align: left; 
+    }
+    body {
+      background-color: rgb(29, 28, 28);
+    }
+
+    g.cell {
+      background-color: blue;
+    }
+
+  </style>
+</head>
+<body>
+  <div id="header" style="display: flex; flex-direction: row; align-items: center; margin-left: 50px;">
+    <img src="http://localhost:8000/oscars_icon.png" width="120" height="150">
+    <div style="display: flex; flex-direction: column;">
+      <h1 id="title">OSCARS</h1>
+      <h2>winners & nominees by race</h2>
+    </div>
+  </div>
   
-</html>
+  <div id="main"></div>
+  <script>
+    var svgWidth = 1500
+    var svgHeight = 1500
+    var width = 1000
+    var height = 1000
+    
+    var svg = d3.select("#main")
+      .append("svg")
+        .attr("width", svgWidth)
+        .attr("height", svgHeight)
+        .attr("transform", "translate(400, -100)"); // pushes viz to right + up
+    
+    var data = []
+    d3.csv("oscar_nominees_with_race.csv", function(csv_data) {
+        for (var i = 0; i < csv_data.length; i++) {
+            // push all datapoints, both nominees and winners
+            data.push(csv_data[i])
+        }
+    
+    
+    color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.race));
+    
+    var numDataPoints = data.length;
+    var nomineeData = data.filter(d => d.winner === "FALSE");
+    var numNominees = nomineeData.length;
+    
+    var winnerData = data.filter(d => d.winner === "TRUE");
+    var numWinners = winnerData.length;
+    
+    let numNomineesSeen = 0;
+    let numWinnersSeen = 0;
+    // we position the winners/nominees in a 1 layer ring, and the physics
+    // simulation will take care of repelling the overlaps
+    let nomineeRadius = 350;
+    for (let i = 0; i < numDataPoints; i++) {
+      // if we're looking at a nominee
+      if (data[i].winner === "FALSE") {
+        // calculate angle of the dot
+        var theta = numNomineesSeen * 2 * Math.PI / numNominees
+        // calculate coordinates relative to center of canvas
+        data[i].x = nomineeRadius * Math.cos(theta) + width / 2;
+        data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
+    
+        numNomineesSeen += 1;
+      }
+    }
+    
+    var node = svg.append("g")
+      .selectAll("circle")
+      .data(data)
+      .enter()
+      .append("circle")
+        .attr("r", 2)
+        .attr("cx", width / 2)
+        .attr("cy", height / 2)
+        .style("fill", d => color(d.race))
+        .style("fill-opacity", 1)
+        .attr("stroke", d => color(d.race))
+        .style("stroke-width", 4)
+    
+    var simulationCircle = d3.forceSimulation()
+        .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
+        .force("charge", d3.forceManyBody().strength(0.4)) // Nodes are attracted one each other of value is > 0
+        .force("collide", d3.forceCollide().strength(2.2).radius(7).iterations(2)) // Force that avoids circle overlapping
+    
+    simulationCircle
+        .nodes(winnerData)
+        .on("tick", function(d){
+          node
+              .attr("cx", function(d){ return d.x; })
+              .attr("cy", function(d){ return d.y; })
+        });
+    
+    var simulationRing = d3.forceSimulation()
+        .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
+        .force("charge", d3.forceManyBody().strength(0)) // Nodes are attracted one each other of value is > 0
+        .force("collide", d3.forceCollide().strength(0.2).radius(6).iterations(1)) // Force that avoids circle overlapping
+    
+    simulationRing
+        .nodes(nomineeData)
+        .on("tick", function(d){
+          node
+              .attr("cx", function(d){ return d.x; })
+              .attr("cy", function(d){ return d.y; })
+        });
+    
+    // 1: LEGEND using D3-LEGEND (https://d3-legend.susielu.com/)
+    // svg.append("g")
+    //   .attr("class", "legend")
+    //   .attr("transform", "translate(1000, 200)");
+    
+    // var legendOrdinal = d3.legendColor()
+    //   .shape("path", d3.symbol().type(d3.symbolCircle).size(150)())
+    //   .shapePadding(10)
+    //   .scale(color)
+    
+    // svg.select(".legend")
+    //   .call(legendOrdinal);
+    // svg.selectAll(".legend")
+    //     .style("background-color", "white");
+    // });
+
+    // 2: LEGEND using manual method
+    // create list of keys
+    var keysSet = new Set(data.map(d => d.race))
+    var keys = Array.from(keysSet)
+
+    // Add one dot in the legend for each name.
+    svg.selectAll('legendDots')
+      .data(keys)
+      .enter()
+      .append("circle")
+        .attr("cx", 100)
+        .attr("cy", function(d,i){ return i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+        .attr("r", 7)
+        .style("fill", function(d){ return color(d)})
+        .attr("transform", "translate(1000, 200)");
+
+    // Add one dot in the legend for each name.
+    svg.selectAll('legendLabels')
+      .data(keys)
+      .enter()
+      .append("text")
+        .attr("x", 120)
+        .attr("y", function(d,i){ return i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+        // .style("fill", function(d){ return color(d)})
+        .text(function(d){ return d})
+        .attr("text-anchor", "left")
+        .style("alignment-baseline", "middle")
+        .style("fill", "#b8b8b8")
+        .style("font-family", "Didact Gothic")
+        .style("text-transform", "lowercase")
+        .attr("transform", "translate(1000, 200)");
+    
+    // Adapted from: https://www.d3-graph-gallery.com/graph/circularpacking_basic.html, 4/3/2021
+  });
+  </script>
+</body>
