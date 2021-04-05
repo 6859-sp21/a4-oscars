@@ -17,10 +17,16 @@ var svg = d3.select("#main")
     .attr("height", 1000)
 
 var data = []
+// range of years to include, inclusive
+var startYear = 1950
+var endYear = 1980
 d3.csv("oscar_nominees_with_race.csv", function(csv_data) {
     for (var i = 0; i < csv_data.length; i++) {
         // push all datapoints, both nominees and winners
-        data.push(csv_data[i])
+        var year = csv_data[i].year_ceremony;
+        if (year >= startYear && year <= endYear) {
+          data.push(csv_data[i]);
+        }
     }
 
 
@@ -38,7 +44,7 @@ let numNomineesSeen = 0;
 let numWinnersSeen = 0;
 // we position the winners/nominees in a 1 layer ring, and the physics
 // simulation will take care of repelling the overlaps
-let nomineeRadius = 350;
+let nomineeRadius = Math.sqrt(numWinners*245)
 for (let i = 0; i < numDataPoints; i++) {
   // if we're looking at a nominee
   if (data[i].winner === "FALSE") {
