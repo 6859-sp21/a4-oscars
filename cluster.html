@@ -52,6 +52,13 @@ for (let i = 0; i < numDataPoints; i++) {
   }
 }
 
+var tooltip = d3.select("#main")
+    .append("div")
+    .style("position", "absolute")
+    .style("visibility", "hidden")
+    .style("background-color", "black")
+    .style("color", "white")
+
 var node = svg.append("g")
   .selectAll("circle")
   .data(data)
@@ -64,6 +71,22 @@ var node = svg.append("g")
     .style("fill-opacity", 1)
     .attr("stroke", d => color(d.race))
     .style("stroke-width", 4)
+    .on("mouseover", function(){
+        tooltip
+        .style("visibility", "visible")
+        })
+    .on("mousemove", function(d){
+        tooltip
+        .style("top", (d3.event.pageY + 5) + "px")
+        .style("left", (d3.event.pageX + 5) + "px")
+        .html("Name: " + d.name + "<br>Film: " + d.film + "<br>Award: " + d.category + "<br>Race: " + d.race)
+        })
+    .on("mouseout", function(){
+        tooltip
+        .style("visibility", "hidden")
+        })
+
+
 
 var simulationCircle = d3.forceSimulation()
     .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
