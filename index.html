@@ -9,11 +9,11 @@
     h1 { 
       color: 	#b8a22a; 
       font-family: 'Didact Gothic', sans-serif; 
-      font-size: 80px;
+      font-size: 60px;
       line-height: 1; 
       margin-left: 40px;
       margin-top: 20px;
-      margin-bottom: 5px;
+      margin-bottom: 0px;
       text-align: left; 
     }
 
@@ -21,7 +21,8 @@
       color: 	#b8a22a; 
       font-family: 'Didact Gothic', sans-serif;
       line-height: 1; 
-      margin-left: 45px;
+      margin-top: 5px;
+      margin-left: 40px;
       text-align: left; 
     }
     body {
@@ -36,7 +37,7 @@
 </head>
 <body>
   <div id="header" style="display: flex; flex-direction: row; align-items: center; margin-left: 50px;">
-    <img src="http://localhost:8000/oscars_icon.png" width="120" height="150">
+    <img src="http://localhost:8000/oscars_icon.png" width="100" height="130">
     <div style="display: flex; flex-direction: column;">
       <h1 id="title">OSCARS</h1>
       <h2>winners & nominees by race</h2>
@@ -45,16 +46,16 @@
   
   <div id="main"></div>
   <script>
-    var svgWidth = 1500
-    var svgHeight = 1500
-    var width = 1000
-    var height = 1000
+    var svgWidth = 1000
+    var svgHeight = 1000
+    var width = 800
+    var height = 800
     
     var svg = d3.select("#main")
       .append("svg")
         .attr("width", svgWidth)
         .attr("height", svgHeight)
-        .attr("transform", "translate(400, -100)"); // pushes viz to right + up
+        .attr("transform", "translate(250, -80)"); // pushes viz to right + up
     
     var data = []
     // range of years to include, inclusive
@@ -192,7 +193,7 @@
         .attr("cy", function(d,i){ return i*25}) // 100 is where the first dot appears. 25 is the distance between dots
         .attr("r", 7)
         .style("fill", function(d){ return color(d)})
-        .attr("transform", "translate(1000, 200)");
+        .attr("transform", "translate(800, 200)");
 
     // Add one dot in the legend for each name.
     svg.selectAll('legendLabels')
@@ -208,7 +209,7 @@
         .style("fill", "#b8b8b8")
         .style("font-family", "Didact Gothic")
         .style("text-transform", "lowercase")
-        .attr("transform", "translate(1000, 200)");
+        .attr("transform", "translate(800, 200)");
     
     // Adapted from: https://www.d3-graph-gallery.com/graph/circularpacking_basic.html, 4/3/2021
   });
