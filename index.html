@@ -71,9 +71,13 @@
     }
     console.log(data[0])
     
-    
-    color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.fixed_race));
-    
+    // default color scale
+    // color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.fixed_race));
+    // customized color scale
+    color = d3.scaleOrdinal()
+      .domain(['white', 'black', 'hispanic', 'asian', 'other'])
+      .range(['#615516', '#b8a22a', '#CE5E33', '#1F848B', '#9C29B1'])
+
     var numDataPoints = data.length;
     var nomineeData = data.filter(d => d.winner === "False");
     var numNominees = nomineeData.length;
@@ -202,11 +206,11 @@
       .append("text")
         .attr("x", 120)
         .attr("y", function(d,i){ return i*25}) // 100 is where the first dot appears. 25 is the distance between dots
-        // .style("fill", function(d){ return color(d)})
+        .style("fill", function(d){ return color(d)})
         .text(function(d){ return d})
         .attr("text-anchor", "left")
         .style("alignment-baseline", "middle")
-        .style("fill", "#b8b8b8")
+        // .style("fill", "#b8b8b8")
         .style("font-family", "Didact Gothic")
         .style("text-transform", "lowercase")
         .attr("transform", "translate(800, 200)");
