@@ -3,7 +3,9 @@
 <head>
   <script src="https://d3js.org/d3.v4.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.13.0/d3-legend.js"></script>
+  <script src="https://cdn.rawgit.com/RasmusFonseca/d3RangeSlider/master/d3RangeSlider.js"></script>
   <link href='https://fonts.googleapis.com/css?family=Didact Gothic' rel='stylesheet'>
+  <link href="https://cdn.rawgit.com/RasmusFonseca/d3RangeSlider/master/d3RangeSlider.css" rel="stylesheet">
 
   <style type="text/css">
     h1 { 
@@ -32,6 +34,19 @@
       background-color: blue;
     }
 
+    #slider-container {
+      position: relative;
+      height:30px;
+      background-color: #eeeef5;
+    }
+
+    #range-label {
+      color: white;
+      text-align: center;
+      font-family: 'Didact Gothic', sans-serif;
+      font-size: 30px;
+    }
+
   </style>
 </head>
 <body>
@@ -42,14 +57,20 @@
       <h2>winners & nominees by race</h2>
     </div>
   </div>
+
   
-  <div id="main"></div>
+  <div id="main">
+    <div id="range-label">1927 - 2019</div>
+    <div id="slider-container"></div>
+  </div>
+
+  <!-- JAVASCRIPT -->
   <script>
     var svgWidth = 1500
     var svgHeight = 1500
     var width = 1000
     var height = 1000
-    
+
     var svg = d3.select("#main")
       .append("svg")
         .attr("width", svgWidth)
@@ -58,8 +79,8 @@
     
     var data = []
     // range of years to include, inclusive
-    var startYear = 1950
-    var endYear = 1980
+    var startYear = 1927
+    var endYear = 2019
     d3.csv("oscar_nominees_with_race.csv", function(csv_data) {
     for (var i = 0; i < csv_data.length; i++) {
         // push all datapoints, both nominees and winners
@@ -68,8 +89,7 @@
           data.push(csv_data[i]);
         }
     }
-    
-    
+
     color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.race));
     
     var numDataPoints = data.length;
@@ -202,8 +222,18 @@
         .style("fill", "#b8b8b8")
         .style("font-family", "Didact Gothic")
         .style("text-transform", "lowercase")
-        .attr("transform", "translate(1000, 200)");
+        .attr("transform", "translate(1000, 200)");  
     
+    
+    // SLIDER LOGIC
+    var slider = createD3RangeSlider(1927, 2019, "#slider-container");
+
+    slider.onChange(function(newRange){
+        d3.select("#range-label").text(newRange.begin + " - " + newRange.end);
+    });
+
+    slider.range(1927, 2019);
+
     // Adapted from: https://www.d3-graph-gallery.com/graph/circularpacking_basic.html, 4/3/2021
   });
   </script>
