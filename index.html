@@ -92,8 +92,12 @@
         // calculate coordinates relative to center of canvas
         data[i].x = nomineeRadius * Math.cos(theta) + width / 2;
         data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
-
+        data[i].level = "Nominee"
         numNomineesSeen += 1;
+      }
+
+      else {
+        data[i].level = "Winner"
       }
     }
     
@@ -124,7 +128,7 @@
               tooltip
               .style("top", (d3.event.pageY + 5) + "px")
               .style("left", (d3.event.pageX + 5) + "px")
-              .html("Name: " + d.name + "<br>Film: " + d.film + "<br>Award: " + d.category + "<br>Race: " + d.race)
+              .html(d.level + "<br>" + "Name: " + d.name + "<br>Film: " + d.film + "<br>Award: " + d.category + "<br>Race: " + d.race)
               })
           .on("mouseout", function(){
               tooltip
