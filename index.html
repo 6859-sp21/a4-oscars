@@ -2,6 +2,7 @@
 <meta charset="utf-8">
 <head>
   <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.13.0/d3-legend.js"></script>
   <script src="https://cdn.rawgit.com/RasmusFonseca/d3RangeSlider/master/d3RangeSlider.js"></script>
   <link href='https://fonts.googleapis.com/css?family=Didact Gothic' rel='stylesheet'>
@@ -34,6 +35,16 @@
       background-color: blue;
     }
 
+    #main {
+      display: flex;
+    }
+
+    #slider-section {
+      width: 50%;
+      margin: auto;
+      padding-top: 30px;
+    }
+
     #slider-container {
       position: relative;
       height:30px;
@@ -47,6 +58,11 @@
       font-size: 30px;
     }
 
+    #legend {
+      /* z-index for now so that the tooltips work on the graph. need to fix this later. */
+      z-index: -100; 
+    }
+
   </style>
 </head>
 <body>
@@ -58,77 +74,74 @@
     </div>
   </div>
 
-  
-  <div id="main">
+  <div id="slider-section">
     <div id="range-label">1927 - 2019</div>
     <div id="slider-container"></div>
+  </div>
+  <div id="main">
+    <div id="graph"></div>
+    <div id="legend"></div>
   </div>
 
   <!-- JAVASCRIPT -->
   <script>
     var svgWidth = 1500
-    var svgHeight = 1500
+    var svgHeight = 1000
     var width = 1000
     var height = 1000
+    var graphsvg = d3.select("#graph")
+        .append("svg")
+        .attr("width", svgWidth)
+        .attr("height", svgHeight)
+        .attr("transform", "translate(400, 0)"); // pushes viz to right + up
 
-    var svg = d3.select("#main")
+
+    var legendsvg = d3.select("#legend")
       .append("svg")
         .attr("width", svgWidth)
         .attr("height", svgHeight)
-        .attr("transform", "translate(400, -100)"); // pushes viz to right + up
-    
-    var data = []
-    // range of years to include, inclusive
-    var startYear = 1927
-    var endYear = 2019
-    d3.csv("oscar_nominees_with_race.csv", function(csv_data) {
-    for (var i = 0; i < csv_data.length; i++) {
-        // push all datapoints, both nominees and winners
-        var year = csv_data[i].year_ceremony;
-        if (year >= startYear && year <= endYear) {
-          data.push(csv_data[i]);
-        }
-    }
+        .attr("transform", "translate(-1100, 0)"); // pushes viz to right + up
+    legendsvg.append("g");
 
-    color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.race));
-    
-    var numDataPoints = data.length;
-    var nomineeData = data.filter(d => d.winner === "FALSE");
-    var numNominees = nomineeData.length;
-    
-    var winnerData = data.filter(d => d.winner === "TRUE");
-    var numWinners = winnerData.length;
-    
-    let numNomineesSeen = 0;
-    let numWinnersSeen = 0;
-    // we position the winners/nominees in a 1 layer ring, and the physics
-    // simulation will take care of repelling the overlaps
-    let nomineeRadius = Math.sqrt(numWinners*245)
-    for (let i = 0; i < numDataPoints; i++) {
-      // if we're looking at a nominee
-      if (data[i].winner === "FALSE") {
-        // calculate angle of the dot
-        var theta = numNomineesSeen * 2 * Math.PI / numNominees
-        // calculate coordinates relative to center of canvas
-        data[i].x = nomineeRadius * Math.cos(theta) + width / 2;
-        data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
-
-        numNomineesSeen += 1;
-      }
-    }
-    
     var tooltip = d3.select("#main")
-      .append("div")
-      .style("position", "absolute")
-      .style("visibility", "hidden")
-      .style("background-color", "black")
-      .style("color", "white")
+        .append("div")
+        .style("position", "absolute")
+        .style("visibility", "hidden")
+        .style("background-color", "black")
+        .style("color", "white")
+    
+    function update(data, allData) {      
+      var numDataPoints = data.length;
+      var nomineeData = data.filter(d => d.winner === "FALSE");
+      var numNominees = nomineeData.length;
+      
+      var winnerData = data.filter(d => d.winner === "TRUE");
+      var numWinners = winnerData.length;
+      
+      let numNomineesSeen = 0;
+      let numWinnersSeen = 0;
+      // we position the nominees in a 1 layer ring, and the physics
+      // simulation will take care of repelling the overlaps
+      let nomineeRadius = Math.sqrt(numWinners*280)
+      for (let i = 0; i < numDataPoints; i++) {
+        // if we're looking at a nominee
+        if (data[i].winner === "FALSE") {
+          // calculate angle of the dot
+          var theta = numNomineesSeen * 2 * Math.PI / numNominees
+          // calculate coordinates relative to center of canvas
+          data[i].x = nomineeRadius * Math.cos(theta) + width / 2;
+          data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
 
-      var node = svg.append("g")
-        .selectAll("circle")
+          numNomineesSeen += 1;
+        }
+      }
+
+      color = d3.scaleOrdinal(d3.schemeCategory10).domain(allData.map(d => d.race));
+      var node = graphsvg.append("g").selectAll(".graph-circle")
         .data(data)
         .enter()
         .append("circle")
+          .classed("graph-circle", true)
           .attr("r", 2)
           .attr("cx", width / 2)
           .attr("cy", height / 2)
@@ -150,13 +163,90 @@
               tooltip
               .style("visibility", "hidden")
               })
-    
-    var simulationCircle = d3.forceSimulation()
+      d3.select('#main')
+        .selectAll(".graph-circle")
+        .data(data)
+        .exit()
+        .remove();
+      
+    }
+
+    d3.csv("oscar_nominees_with_race.csv", function(csv_data) {
+      function getData(startYear, endYear) {
+        var data = []
+        for (var i = 0; i < csv_data.length; i++) {
+          // push all datapoints, both nominees and winners
+          var year = csv_data[i].year_ceremony;
+          if (year >= startYear && year <= endYear) {
+            data.push(csv_data[i]);
+          }
+        }
+        return data;
+      }
+
+      color = d3.scaleOrdinal(d3.schemeCategory10).domain(csv_data.map(d => d.race));
+      // 1: LEGEND using D3-LEGEND (https://d3-legend.susielu.com/)
+      // svg.append("g")
+      //   .attr("class", "legend")
+      //   .attr("transform", "translate(1000, 200)");
+      
+      // var legendOrdinal = d3.legendColor()
+      //   .shape("path", d3.symbol().type(d3.symbolCircle).size(150)())
+      //   .shapePadding(10)
+      //   .scale(color)
+      
+      // svg.select(".legend")
+      //   .call(legendOrdinal);
+      // svg.selectAll(".legend")
+      //     .style("background-color", "white");
+      // });
+
+      // 2: LEGEND using manual method
+      // create list of keys
+      var keysSet = new Set(csv_data.map(d => d.race))
+      var keys = Array.from(keysSet)
+
+      // Add one dot in the legend for each name.
+      legendsvg.selectAll('legendDots')
+        .data(keys)
+        .enter()
+        .append("circle")
+          .attr("cx", 100)
+          .attr("cy", function(d,i){ return i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+          .attr("r", 7)
+          .style("fill", function(d){ return color(d)})
+          .attr("transform", "translate(1000, 200)");
+
+      // Add one dot in the legend for each name.
+      legendsvg.selectAll('legendLabels')
+        .data(keys)
+        .enter()
+        .append("text")
+          .attr("x", 120)
+          .attr("y", function(d,i){ return i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+          // .style("fill", function(d){ return color(d)})
+          .text(function(d){ return d})
+          .attr("text-anchor", "left")
+          .style("alignment-baseline", "middle")
+          .style("fill", "#b8b8b8")
+          .style("font-family", "Didact Gothic")
+          .style("text-transform", "lowercase")
+          .attr("transform", "translate(1000, 200)");  
+
+      var data = getData(1927, 2019);
+      update(data, csv_data);
+
+      var node = graphsvg.selectAll(".graph-circle")
+
+      var winnerData = data.filter(d => d.winner === "TRUE");
+      var simulationCircle = d3.forceSimulation()
         .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
         .force("charge", d3.forceManyBody().strength(0.4)) // Nodes are attracted one each other of value is > 0
-        .force("collide", d3.forceCollide().strength(2.2).radius(7).iterations(2)) // Force that avoids circle overlapping
+        .force("collide", d3.forceCollide().strength(0.8).radius(7).iterations(2)) // Force that avoids circle overlapping
+        .force('x', d3.forceX().x(width/2).strength(0.1))
+        .force('y', d3.forceY().y(height/2).strength(0.1))
 
-    simulationCircle
+      simulationCircle
         .nodes(winnerData)
         .on("tick", function(d){
           node
@@ -164,75 +254,43 @@
               .attr("cy", function(d){ return d.y; })
         });
 
-    var simulationRing = d3.forceSimulation()
+      var nomineeData = data.filter(d => d.winner === "FALSE");
+      var simulationRing = d3.forceSimulation()
         .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
         .force("charge", d3.forceManyBody().strength(0)) // Nodes are attracted one each other of value is > 0
         .force("collide", d3.forceCollide().strength(0.2).radius(6).iterations(1)) // Force that avoids circle overlapping
 
-    simulationRing
+      simulationRing
         .nodes(nomineeData)
         .on("tick", function(d){
           node
               .attr("cx", function(d){ return d.x; })
               .attr("cy", function(d){ return d.y; })
         });
-    // 1: LEGEND using D3-LEGEND (https://d3-legend.susielu.com/)
-    // svg.append("g")
-    //   .attr("class", "legend")
-    //   .attr("transform", "translate(1000, 200)");
-    
-    // var legendOrdinal = d3.legendColor()
-    //   .shape("path", d3.symbol().type(d3.symbolCircle).size(150)())
-    //   .shapePadding(10)
-    //   .scale(color)
-    
-    // svg.select(".legend")
-    //   .call(legendOrdinal);
-    // svg.selectAll(".legend")
-    //     .style("background-color", "white");
-    // });
 
-    // 2: LEGEND using manual method
-    // create list of keys
-    var keysSet = new Set(data.map(d => d.race))
-    var keys = Array.from(keysSet)
-
-    // Add one dot in the legend for each name.
-    svg.selectAll('legendDots')
-      .data(keys)
-      .enter()
-      .append("circle")
-        .attr("cx", 100)
-        .attr("cy", function(d,i){ return i*25}) // 100 is where the first dot appears. 25 is the distance between dots
-        .attr("r", 7)
-        .style("fill", function(d){ return color(d)})
-        .attr("transform", "translate(1000, 200)");
-
-    // Add one dot in the legend for each name.
-    svg.selectAll('legendLabels')
-      .data(keys)
-      .enter()
-      .append("text")
-        .attr("x", 120)
-        .attr("y", function(d,i){ return i*25}) // 100 is where the first dot appears. 25 is the distance between dots
-        // .style("fill", function(d){ return color(d)})
-        .text(function(d){ return d})
-        .attr("text-anchor", "left")
-        .style("alignment-baseline", "middle")
-        .style("fill", "#b8b8b8")
-        .style("font-family", "Didact Gothic")
-        .style("text-transform", "lowercase")
-        .attr("transform", "translate(1000, 200)");  
     
-    
-    // SLIDER LOGIC
-    var slider = createD3RangeSlider(1927, 2019, "#slider-container");
+      // SLIDER LOGIC
+      var slider = createD3RangeSlider(1927, 2019, "#slider-container");
 
-    slider.onChange(function(newRange){
+      slider.onChange(function(newRange){
+        console.log('changing')
         d3.select("#range-label").text(newRange.begin + " - " + newRange.end);
-    });
+        var newData = getData(newRange.begin, newRange.end);
+        update(newData, csv_data)
+        var numWinners = newData.filter(d => d.winner == "TRUE").length
+        let circleChargeStrength = 2 - numWinners * (0.00206)
+        let circleRadius = numWinners / 140.0 + 20.0/7
+        simulationCircle
+          .force("charge", d3.forceManyBody().strength(circleChargeStrength))
+          .force("collide", d3.forceCollide().strength(0.3).radius(circleRadius).iterations(1)) // Force that avoids circle overlapping
+          .force('x', d3.forceX().x(width/2).strength(0.1))
+          .force('y', d3.forceY().y(height/2).strength(0.1))
+          .alpha(0.2)
+          .restart()
+        simulationRing.alpha(0.3).restart()
+      });
 
-    slider.range(1927, 2019);
+      slider.range(1927, 2019);
 
     // Adapted from: https://www.d3-graph-gallery.com/graph/circularpacking_basic.html, 4/3/2021
   });
