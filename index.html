@@ -60,7 +60,7 @@
     // range of years to include, inclusive
     var startYear = 1950
     var endYear = 1980
-    d3.csv("oscar_nominees_with_race.csv", function(csv_data) {
+    d3.csv("oscar_nominees_with_fixed_race.csv", function(csv_data) {
     for (var i = 0; i < csv_data.length; i++) {
         // push all datapoints, both nominees and winners
         var year = csv_data[i].year_ceremony;
@@ -68,17 +68,18 @@
           data.push(csv_data[i]);
         }
     }
+    console.log(data[0])
     
     
-    color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.race));
+    color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.fixed_race));
     
     var numDataPoints = data.length;
-    var nomineeData = data.filter(d => d.winner === "FALSE");
+    var nomineeData = data.filter(d => d.winner === "False");
     var numNominees = nomineeData.length;
     
-    var winnerData = data.filter(d => d.winner === "TRUE");
+    var winnerData = data.filter(d => d.winner === "True");
     var numWinners = winnerData.length;
-    
+    console.log(numNominees, numWinners)
     let numNomineesSeen = 0;
     let numWinnersSeen = 0;
     // we position the winners/nominees in a 1 layer ring, and the physics
@@ -86,7 +87,7 @@
     let nomineeRadius = Math.sqrt(numWinners*245)
     for (let i = 0; i < numDataPoints; i++) {
       // if we're looking at a nominee
-      if (data[i].winner === "FALSE") {
+      if (data[i].winner === "False") {
         // calculate angle of the dot
         var theta = numNomineesSeen * 2 * Math.PI / numNominees
         // calculate coordinates relative to center of canvas
@@ -116,9 +117,9 @@
           .attr("r", 2)
           .attr("cx", width / 2)
           .attr("cy", height / 2)
-          .style("fill", d => color(d.race))
+          .style("fill", d => color(d.fixed_race))
           .style("fill-opacity", 1)
-          .attr("stroke", d => color(d.race))
+          .attr("stroke", d => color(d.fixed_race))
           .style("stroke-width", 4)
           .on("mouseover", function(){
               tooltip
@@ -128,7 +129,7 @@
               tooltip
               .style("top", (d3.event.pageY + 5) + "px")
               .style("left", (d3.event.pageX + 5) + "px")
-              .html(d.level + "<br>" + "Name: " + d.name + "<br>Film: " + d.film + "<br>Award: " + d.category + "<br>Race: " + d.race)
+              .html(d.level + "<br>" + "Name: " + d.name + "<br>Film: " + d.film + "<br>Award: " + d.category + "<br>Race: " + d.fixed_race)
               })
           .on("mouseout", function(){
               tooltip
@@ -178,8 +179,9 @@
 
     // 2: LEGEND using manual method
     // create list of keys
-    var keysSet = new Set(data.map(d => d.race))
+    var keysSet = new Set(data.map(d => d.fixed_race))
     var keys = Array.from(keysSet)
+    console.log(keys)
 
     // Add one dot in the legend for each name.
     svg.selectAll('legendDots')
