@@ -127,7 +127,8 @@
       let numWinnersSeen = 0;
       // we position the nominees in a 1 layer ring, and the physics
       // simulation will take care of repelling the overlaps
-      let nomineeRadius = Math.sqrt(numWinners*280)
+      let nomineeRadius = Math.max(Math.sqrt(numWinners*280), 120)
+      let winnerRadius = Math.max(numWinners * 0.5, 45)
       for (let i = 0; i < numDataPoints; i++) {
         // if we're looking at a nominee
         if (data[i].winner === "FALSE") {
@@ -139,9 +140,12 @@
           data[i].level = "Nominee"
           numNomineesSeen += 1;
         }
-
         else {
+          var theta = numWinnersSeen * 2 * Math.PI / numWinners
+          data[i].x = winnerRadius * Math.cos(theta) + width / 2;
+          data[i].y = winnerRadius * Math.sin(theta) + height / 2;
           data[i].level = "Winner"
+          numWinnersSeen += 1
         }
       }
 
@@ -153,7 +157,7 @@
         .range(['#615516', '#b8a22a', '#CE5E33', '#1F848B', '#9C29B1'])
       var node = graphsvg.selectAll(".graph-circle").data(data, d => d.id)
 
-      node.exit().attr("r", 0);
+      node.exit().remove();
       
       node
         .enter()
@@ -259,10 +263,8 @@
       var winnerData = data.filter(d => d.winner === "TRUE");
       var simulationCircle = d3.forceSimulation()
         .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
-        .force("charge", d3.forceManyBody().strength(0.4)) // Nodes are attracted one each other of value is > 0
-        .force("collide", d3.forceCollide().strength(0.8).radius(7).iterations(2)) // Force that avoids circle overlapping
-        .force('x', d3.forceX().x(width/2).strength(0.1))
-        .force('y', d3.forceY().y(height/2).strength(0.1))
+        .force("charge", d3.forceManyBody().strength(0)) // Nodes are attracted one each other of value is > 0
+        .force("collide", d3.forceCollide().strength(0.2).radius(6).iterations(1)) // Force that avoids circle overlapping
 
       simulationCircle
         .nodes(winnerData)
@@ -296,16 +298,7 @@
         update(newData, csv_data)
         
         var numWinners = newData.filter(d => d.winner == "TRUE").length
-        let circleChargeStrength = 2.5 + numWinners * (0.00206)
-        let circleRadius = numWinners / 170.0 + 4
-        let circleCollideStrength = 0.01 + 0.0004 * numWinners
-        simulationCircle
-          .force("charge", d3.forceManyBody().strength(circleChargeStrength))
-          .force("collide", d3.forceCollide().strength(circleCollideStrength).radius(circleRadius).iterations(2)) // Force that avoids circle overlapping
-          .force('x', d3.forceX().x(width/2).strength(0.08))
-          .force('y', d3.forceY().y(height/2).strength(0.08))
-          .alpha(0.1)
-          .restart()
+        simulationCircle.alpha(0.1).alphaTarget(0).restart()
         simulationRing.alpha(0.1).alphaTarget(0).restart()
       });
 
