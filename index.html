@@ -117,10 +117,10 @@
     
     function update(data, allData) {      
       var numDataPoints = data.length;
-      var nomineeData = data.filter(d => d.winner === "False");
+      var nomineeData = data.filter(d => d.winner === "FALSE");
       var numNominees = nomineeData.length;
       
-      var winnerData = data.filter(d => d.winner === "True");
+      var winnerData = data.filter(d => d.winner === "TRUE");
       var numWinners = winnerData.length;
       
       let numNomineesSeen = 0;
@@ -130,7 +130,7 @@
       let nomineeRadius = Math.sqrt(numWinners*280)
       for (let i = 0; i < numDataPoints; i++) {
         // if we're looking at a nominee
-        if (data[i].winner === "False") {
+        if (data[i].winner === "FALSE") {
           // calculate angle of the dot
           var theta = numNomineesSeen * 2 * Math.PI / numNominees
           // calculate coordinates relative to center of canvas
@@ -151,8 +151,11 @@
       color = d3.scaleOrdinal()
         .domain(['white', 'black', 'hispanic', 'asian', 'other'])
         .range(['#615516', '#b8a22a', '#CE5E33', '#1F848B', '#9C29B1'])
-      var node = graphsvg.append("g").selectAll(".graph-circle")
-        .data(data)
+      var node = graphsvg.selectAll(".graph-circle").data(data, d => d.id)
+
+      node.exit().attr("r", 0);
+      
+      node
         .enter()
         .append("circle")
           .classed("graph-circle", true)
@@ -171,21 +174,17 @@
               tooltip
               .style("top", (d3.event.pageY + 5) + "px")
               .style("left", (d3.event.pageX + 5) + "px")
-              .html(d.level + "<br>" + "Name: " + d.name + "<br>Film: " + d.film + "<br>Award: " + d.category + "<br>Race: " + d.fixed_race)
+              .html(d.level + "<br>" + "Name: " + d.name + "<br>Film: " + d.film + "<br>Award: " + d.category + "<br>Race: " + d.fixed_race + "<br>Year:" + d.year_ceremony)
               })
           .on("mouseout", function(){
               tooltip
               .style("visibility", "hidden")
               })
-      d3.select('#main')
-        .selectAll(".graph-circle")
-        .data(data)
-        .exit()
-        .remove();
-      
     }
 
     d3.csv("oscar_nominees_with_fixed_race.csv", function(csv_data) {
+      var store = csv_data // stores the current filtered data according to year range
+
       function getData(startYear, endYear) {
         var data = []
         for (var i = 0; i < csv_data.length; i++) {
@@ -224,7 +223,6 @@
       // create list of keys
       var keysSet = new Set(csv_data.map(d => d.fixed_race))
       var keys = Array.from(keysSet)
-      console.log(keys)
 
       // Add one dot in the legend for each name.
       legendsvg.selectAll('legendDots')
@@ -258,7 +256,7 @@
 
       var node = graphsvg.selectAll(".graph-circle")
 
-      var winnerData = data.filter(d => d.winner === "True");
+      var winnerData = data.filter(d => d.winner === "TRUE");
       var simulationCircle = d3.forceSimulation()
         .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
         .force("charge", d3.forceManyBody().strength(0.4)) // Nodes are attracted one each other of value is > 0
@@ -274,7 +272,7 @@
               .attr("cy", function(d){ return d.y; })
         });
 
-      var nomineeData = data.filter(d => d.winner === "False");
+      var nomineeData = data.filter(d => d.winner === "FALSE");
       var simulationRing = d3.forceSimulation()
         .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
         .force("charge", d3.forceManyBody().strength(0)) // Nodes are attracted one each other of value is > 0
@@ -292,11 +290,12 @@
       var slider = createD3RangeSlider(1927, 2019, "#slider-container");
 
       slider.onChange(function(newRange){
-        console.log('changing')
         d3.select("#range-label").text(newRange.begin + " - " + newRange.end);
         var newData = getData(newRange.begin, newRange.end);
+
         update(newData, csv_data)
-        var numWinners = newData.filter(d => d.winner == "True").length
+        
+        var numWinners = newData.filter(d => d.winner == "TRUE").length
         let circleChargeStrength = 2.5 + numWinners * (0.00206)
         let circleRadius = numWinners / 170.0 + 4
         let circleCollideStrength = 0.01 + 0.0004 * numWinners
@@ -307,7 +306,7 @@
           .force('y', d3.forceY().y(height/2).strength(0.08))
           .alpha(0.1)
           .restart()
-        simulationRing.alpha(0.1).restart()
+        simulationRing.alpha(0.1).alphaTarget(0).restart()
       });
 
       slider.range(1927, 2019);
