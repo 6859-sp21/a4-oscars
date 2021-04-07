@@ -38,10 +38,12 @@
 
     #main {
       display: flex;
+      width: 1500px;
+      margin: auto;
     }
 
     #slider-section {
-      width: 50%;
+      width: 1000px;
       margin: auto;
       padding-top: 30px;
     }
@@ -57,6 +59,12 @@
       text-align: center;
       font-family: 'Didact Gothic', sans-serif;
       font-size: 30px;
+    }
+
+    #graph {
+      /* so the graph doesn't go outside of the container on zoom */
+      overflow: hidden;
+      padding-top: 30px;
     }
 
     #legend {
@@ -90,22 +98,27 @@
 
   <!-- JAVASCRIPT -->
   <script>
-    var svgWidth = 1500
+    var svgWidth = 1000
     var svgHeight = 1000
+    var legendWidth = 400
     var width = 1000
     var height = 1000
     var graphsvg = d3.select("#graph")
         .append("svg")
         .attr("width", svgWidth)
         .attr("height", svgHeight)
-        .attr("transform", "translate(400, 0)"); // pushes viz to right + up
+        // .attr("transform", "translate(400, 0)")  // pushes viz to right + up
+        .call(d3.zoom().on("zoom", function () {
+          graphsvg.attr("transform", d3.event.transform)
+        }))
+        .append("g");
 
 
     var legendsvg = d3.select("#legend")
       .append("svg")
-        .attr("width", svgWidth)
+        .attr("width", legendWidth)
         .attr("height", svgHeight)
-        .attr("transform", "translate(-1100, 0)"); // pushes viz to right + up
+        .attr("transform", "translate(0, 200)"); // pushes viz to right + up
     legendsvg.append("g");
 
     var tooltip = d3.select("#main")
@@ -234,10 +247,9 @@
         .enter()
         .append("circle")
           .attr("cx", 100)
-          .attr("cy", function(d,i){ return i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+          .attr("cy", function(d,i){ return (i+1)*25}) // 100 is where the first dot appears. 25 is the distance between dots
           .attr("r", 7)
           .style("fill", function(d){ return color(d)})
-          .attr("transform", "translate(1000, 200)");
 
       // Add one dot in the legend for each name.
       legendsvg.selectAll('legendLabels')
@@ -245,15 +257,14 @@
         .enter()
         .append("text")
           .attr("x", 120)
-          .attr("y", function(d,i){ return i*25}) // 100 is where the first dot appears. 25 is the distance between dots
+          .attr("y", function(d,i){ return (i+1)*25}) // 100 is where the first dot appears. 25 is the distance between dots
           // .style("fill", function(d){ return color(d)})
           .text(function(d){ return d})
           .attr("text-anchor", "left")
           .style("alignment-baseline", "middle")
           .style("fill", "#b8b8b8")
           .style("font-family", "Didact Gothic")
-          .style("text-transform", "lowercase")
-          .attr("transform", "translate(1000, 200)");  
+          .style("text-transform", "lowercase");
 
       var data = getData(1927, 2019);
       update(data, csv_data);
