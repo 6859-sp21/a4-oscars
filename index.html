@@ -12,11 +12,11 @@
     h1 { 
       color: 	#b8a22a; 
       font-family: 'Didact Gothic', sans-serif; 
-      font-size: 80px;
+      font-size: 60px;
       line-height: 1; 
       margin-left: 40px;
       margin-top: 20px;
-      margin-bottom: 5px;
+      margin-bottom: 0px;
       text-align: left; 
     }
 
@@ -24,7 +24,8 @@
       color: 	#b8a22a; 
       font-family: 'Didact Gothic', sans-serif;
       line-height: 1; 
-      margin-left: 45px;
+      margin-top: 5px;
+      margin-left: 40px;
       text-align: left; 
     }
     body {
@@ -67,7 +68,7 @@
 </head>
 <body>
   <div id="header" style="display: flex; flex-direction: row; align-items: center; margin-left: 50px;">
-    <img src="http://localhost:8000/oscars_icon.png" width="120" height="150">
+    <img src="http://localhost:8000/oscars_icon.png" width="100" height="130">
     <div style="display: flex; flex-direction: column;">
       <h1 id="title">OSCARS</h1>
       <h2>winners & nominees by race</h2>
@@ -104,18 +105,18 @@
     legendsvg.append("g");
 
     var tooltip = d3.select("#main")
-        .append("div")
-        .style("position", "absolute")
-        .style("visibility", "hidden")
-        .style("background-color", "black")
-        .style("color", "white")
+      .append("div")
+      .style("position", "absolute")
+      .style("visibility", "hidden")
+      .style("background-color", "black")
+      .style("color", "white")
     
     function update(data, allData) {      
       var numDataPoints = data.length;
-      var nomineeData = data.filter(d => d.winner === "FALSE");
+      var nomineeData = data.filter(d => d.winner === "False");
       var numNominees = nomineeData.length;
       
-      var winnerData = data.filter(d => d.winner === "TRUE");
+      var winnerData = data.filter(d => d.winner === "True");
       var numWinners = winnerData.length;
       
       let numNomineesSeen = 0;
@@ -125,18 +126,27 @@
       let nomineeRadius = Math.sqrt(numWinners*280)
       for (let i = 0; i < numDataPoints; i++) {
         // if we're looking at a nominee
-        if (data[i].winner === "FALSE") {
+        if (data[i].winner === "False") {
           // calculate angle of the dot
           var theta = numNomineesSeen * 2 * Math.PI / numNominees
           // calculate coordinates relative to center of canvas
           data[i].x = nomineeRadius * Math.cos(theta) + width / 2;
           data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
-
+          data[i].level = "Nominee"
           numNomineesSeen += 1;
+        }
+
+        else {
+          data[i].level = "Winner"
         }
       }
 
-      color = d3.scaleOrdinal(d3.schemeCategory10).domain(allData.map(d => d.race));
+      // default color scale
+      // color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.fixed_race));
+      // customized color scale
+      color = d3.scaleOrdinal()
+        .domain(['white', 'black', 'hispanic', 'asian', 'other'])
+        .range(['#615516', '#b8a22a', '#CE5E33', '#1F848B', '#9C29B1'])
       var node = graphsvg.append("g").selectAll(".graph-circle")
         .data(data)
         .enter()
@@ -145,9 +155,9 @@
           .attr("r", 2)
           .attr("cx", width / 2)
           .attr("cy", height / 2)
-          .style("fill", d => color(d.race))
+          .style("fill", d => color(d.fixed_race))
           .style("fill-opacity", 1)
-          .attr("stroke", d => color(d.race))
+          .attr("stroke", d => color(d.fixed_race))
           .style("stroke-width", 4)
           .on("mouseover", function(){
               tooltip
@@ -157,7 +167,7 @@
               tooltip
               .style("top", (d3.event.pageY + 5) + "px")
               .style("left", (d3.event.pageX + 5) + "px")
-              .html("Name: " + d.name + "<br>Film: " + d.film + "<br>Award: " + d.category + "<br>Race: " + d.race)
+              .html(d.level + "<br>" + "Name: " + d.name + "<br>Film: " + d.film + "<br>Award: " + d.category + "<br>Race: " + d.fixed_race)
               })
           .on("mouseout", function(){
               tooltip
@@ -171,7 +181,7 @@
       
     }
 
-    d3.csv("oscar_nominees_with_race.csv", function(csv_data) {
+    d3.csv("oscar_nominees_with_fixed_race.csv", function(csv_data) {
       function getData(startYear, endYear) {
         var data = []
         for (var i = 0; i < csv_data.length; i++) {
@@ -184,7 +194,12 @@
         return data;
       }
 
-      color = d3.scaleOrdinal(d3.schemeCategory10).domain(csv_data.map(d => d.race));
+      // default color scale
+      // color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.fixed_race));
+      // customized color scale
+      color = d3.scaleOrdinal()
+        .domain(['white', 'black', 'hispanic', 'asian', 'other'])
+        .range(['#615516', '#b8a22a', '#CE5E33', '#1F848B', '#9C29B1'])
       // 1: LEGEND using D3-LEGEND (https://d3-legend.susielu.com/)
       // svg.append("g")
       //   .attr("class", "legend")
@@ -203,8 +218,9 @@
 
       // 2: LEGEND using manual method
       // create list of keys
-      var keysSet = new Set(csv_data.map(d => d.race))
+      var keysSet = new Set(csv_data.map(d => d.fixed_race))
       var keys = Array.from(keysSet)
+      console.log(keys)
 
       // Add one dot in the legend for each name.
       legendsvg.selectAll('legendDots')
@@ -238,7 +254,7 @@
 
       var node = graphsvg.selectAll(".graph-circle")
 
-      var winnerData = data.filter(d => d.winner === "TRUE");
+      var winnerData = data.filter(d => d.winner === "True");
       var simulationCircle = d3.forceSimulation()
         .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
         .force("charge", d3.forceManyBody().strength(0.4)) // Nodes are attracted one each other of value is > 0
@@ -254,7 +270,7 @@
               .attr("cy", function(d){ return d.y; })
         });
 
-      var nomineeData = data.filter(d => d.winner === "FALSE");
+      var nomineeData = data.filter(d => d.winner === "False");
       var simulationRing = d3.forceSimulation()
         .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
         .force("charge", d3.forceManyBody().strength(0)) // Nodes are attracted one each other of value is > 0
@@ -267,7 +283,6 @@
               .attr("cx", function(d){ return d.x; })
               .attr("cy", function(d){ return d.y; })
         });
-
     
       // SLIDER LOGIC
       var slider = createD3RangeSlider(1927, 2019, "#slider-container");
@@ -277,7 +292,7 @@
         d3.select("#range-label").text(newRange.begin + " - " + newRange.end);
         var newData = getData(newRange.begin, newRange.end);
         update(newData, csv_data)
-        var numWinners = newData.filter(d => d.winner == "TRUE").length
+        var numWinners = newData.filter(d => d.winner == "True").length
         let circleChargeStrength = 2 - numWinners * (0.00206)
         let circleRadius = numWinners / 140.0 + 20.0/7
         simulationCircle
