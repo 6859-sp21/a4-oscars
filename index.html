@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <head>
-  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://d3js.org/d3.v5.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3-legend/2.13.0/d3-legend.js"></script>
   <script src="https://cdn.rawgit.com/RasmusFonseca/d3RangeSlider/master/d3RangeSlider.js"></script>
@@ -95,7 +95,7 @@
   </div>
 
   <div id="slider-section">
-    <div id="range-label">1927 - 2019</div>
+    <div id="range-label">1928 - 2019</div>
     <div id="slider-container"></div>
   </div>
   <div id="main">
@@ -179,13 +179,12 @@
       color = d3.scaleOrdinal()
         .domain(['white', 'black', 'hispanic', 'asian', 'other'])
         .range(['#615516', '#b8a22a', '#CE5E33', '#1F848B', '#9C29B1'])
-      var node = graphsvg.selectAll(".graph-circle").data(data, d => d.id)
-
-      node.exit().remove();
-      
+      var node = graphsvg
+        .selectAll(".graph-circle")
+        .data(data, d => d.id);
       node
-        .enter()
-        .append("circle")
+        .join(
+        enter => enter.append("circle")
           .classed("graph-circle", true)
           .attr("r", 2)
           .attr("cx", width / 2)
@@ -207,12 +206,13 @@
           .on("mouseout", function(){
               tooltip
               .style("visibility", "hidden")
-              })
+              }),
+        update => update,
+        exit => exit.remove()
+      )   
     }
 
-    d3.csv("oscar_nominees_with_fixed_race.csv", function(csv_data) {
-      var store = csv_data // stores the current filtered data according to year range
-
+    d3.csv("oscar_nominees_with_fixed_race.csv").then((csv_data) => {
       function getData(startYear, endYear) {
         var data = []
         for (var i = 0; i < csv_data.length; i++) {
@@ -277,7 +277,7 @@
           .style("font-family", "Didact Gothic")
           .style("text-transform", "lowercase");
 
-      var data = getData(1927, 2019);
+      var data = getData(1928, 2019);
       update(data, csv_data);
 
       var node = graphsvg.selectAll(".graph-circle")
@@ -311,7 +311,7 @@
         });
     
       // SLIDER LOGIC
-      var slider = createD3RangeSlider(1927, 2019, "#slider-container");
+      var slider = createD3RangeSlider(1928, 2019, "#slider-container");
 
       slider.onChange(function(newRange){
         d3.select("#range-label").text(newRange.begin + " - " + newRange.end);
@@ -319,14 +319,13 @@
 
         update(newData, csv_data)
         
-        var numWinners = newData.filter(d => d.winner == "TRUE").length
-        simulationCircle.alpha(0.1).alphaTarget(0).restart()
-        simulationRing.alpha(0.1).alphaTarget(0).restart()
+        var winners = newData.filter(d => d.winner == "TRUE");
+        var nominees = newData.filter(d => d.winner == "FALSE")
+        simulationCircle.nodes(winners).alpha(0.1).alphaTarget(0).restart()
+        simulationRing.nodes(nominees).alpha(0.1).alphaTarget(0).restart()
       });
 
-      slider.range(1927, 2019);
-
-
-  });
+      slider.range(1928, 2019);
+    });
   </script>
 </body>
