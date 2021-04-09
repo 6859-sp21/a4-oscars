@@ -139,12 +139,12 @@
       .style("background-color", "black")
       .style("color", "white")
     
-    function update(data, allData) {      
+    function update(data, startYear, endYear) {      
       var numDataPoints = data.length;
-      var nomineeData = data.filter(d => d.winner === "FALSE");
+      var nomineeData = data.filter(d => d.winner === "FALSE" && d.year_ceremony >= startYear && d.year_ceremony <= endYear);
       var numNominees = nomineeData.length;
       
-      var winnerData = data.filter(d => d.winner === "TRUE");
+      var winnerData = data.filter(d => d.winner === "TRUE" && d.year_ceremony >= startYear && d.year_ceremony <= endYear);
       var numWinners = winnerData.length;
       
       let numNomineesSeen = 0;
@@ -154,6 +154,10 @@
       let nomineeRadius = Math.max(Math.sqrt(numWinners*280), 120)
       let winnerRadius = Math.max(numWinners * 0.5, 45)
       for (let i = 0; i < numDataPoints; i++) {
+        // if the datapoint is not within range, let's ignore it
+        if (data[i].year_ceremony < startYear || data[i].year_ceremony > endYear) {
+          continue
+        }
         // if we're looking at a nominee
         if (data[i].winner === "FALSE") {
           // calculate angle of the dot
@@ -172,6 +176,7 @@
           numWinnersSeen += 1
         }
       }
+      console.log('length', data.length)
 
       // default color scale
       // color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.fixed_race));
@@ -182,8 +187,7 @@
       var node = graphsvg
         .selectAll(".graph-circle")
         .data(data, d => d.id);
-      node
-        .join(
+      node.join(
         enter => enter.append("circle")
           .classed("graph-circle", true)
           .attr("r", 2)
@@ -207,7 +211,13 @@
               tooltip
               .style("visibility", "hidden")
               }),
-        update => update,
+        update => update.attr("r", d => {
+            // if the datapoint is within range, it has a radius of 2. otherwise, we hide it with radius 0
+            if (d.year_ceremony >= startYear && d.year_ceremony <= endYear) {
+              return 2
+            }
+            return 0
+          }),
         exit => exit.remove()
       )   
     }
@@ -277,12 +287,11 @@
           .style("font-family", "Didact Gothic")
           .style("text-transform", "lowercase");
 
-      var data = getData(1928, 2019);
-      update(data, csv_data);
+      update(csv_data, 1928, 2019);
 
       var node = graphsvg.selectAll(".graph-circle")
 
-      var winnerData = data.filter(d => d.winner === "TRUE");
+      var winnerData = csv_data.filter(d => d.winner === "TRUE");
       var simulationCircle = d3.forceSimulation()
         .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
         .force("charge", d3.forceManyBody().strength(0)) // Nodes are attracted one each other of value is > 0
@@ -296,7 +305,7 @@
               .attr("cy", function(d){ return d.y; })
         });
 
-      var nomineeData = data.filter(d => d.winner === "FALSE");
+      var nomineeData = csv_data.filter(d => d.winner === "FALSE");
       var simulationRing = d3.forceSimulation()
         .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
         .force("charge", d3.forceManyBody().strength(0)) // Nodes are attracted one each other of value is > 0
@@ -317,7 +326,7 @@
         d3.select("#range-label").text(newRange.begin + " - " + newRange.end);
         var newData = getData(newRange.begin, newRange.end);
 
-        update(newData, csv_data)
+        update(csv_data, newRange.begin, newRange.end)
         
         var winners = newData.filter(d => d.winner == "TRUE");
         var nominees = newData.filter(d => d.winner == "FALSE")
