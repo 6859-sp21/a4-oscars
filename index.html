@@ -7,6 +7,7 @@
   <script src="https://cdn.rawgit.com/RasmusFonseca/d3RangeSlider/master/d3RangeSlider.js"></script>
   <link href='https://fonts.googleapis.com/css?family=Didact Gothic' rel='stylesheet'>
   <link href="https://cdn.rawgit.com/RasmusFonseca/d3RangeSlider/master/d3RangeSlider.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
 
   <style type="text/css">
     h1 { 
@@ -93,11 +94,21 @@
       <h2>winners & nominees by race</h2>
     </div>
   </div>
-
+  <!-- slider -->
   <div id="slider-section">
     <div id="range-label">1928 - 2019</div>
     <div id="slider-container"></div>
   </div>
+  <!-- category selection -->
+  <div class="text-center pt-3">
+    <button type="button" class="mx-1 btn btn-light">All</button>
+    <button type="button" class="mx-1 btn btn-outline-light">Best Director</button>
+    <button type="button" class="mx-1 btn btn-outline-light">Best Actor</button>
+    <button type="button" class="mx-1 btn btn-outline-light">Best Actress</button>
+    <button type="button" class="mx-1 btn btn-outline-light">Best Supporting Actor</button>
+    <button type="button" class="mx-1 btn btn-outline-light">Best Supporting Actress</button>
+  </div>
+  <!-- graph -->
   <div id="main">
     <div id="graph"></div>
     <div id="legend"></div>
