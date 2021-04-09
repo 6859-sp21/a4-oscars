@@ -175,8 +175,8 @@
 
       // we position the nominees in a 1 layer ring, and the physics
       // simulation will take care of repelling the overlaps
-      let nomineeRadius = Math.max(Math.sqrt(numWinners*300), 120)
-      let winnerRadius = Math.max(numWinners * 0.5, 45)
+      let nomineeRadius = Math.max(Math.sqrt(numWinners*400), 120)
+      let winnerRadius = Math.max(Math.sqrt(numWinners * 80), 50)
 
       // separate sectors by 36 degrees
       var sectorSeparation = 2 * Math.PI / 10.0;
@@ -203,18 +203,26 @@
 
         // if we're looking at a nominee
         if (data[i].winner === "FALSE") {
+          var numNomineeInCategory = nomineeDataByCategory[data[i].category].length
           // calculate angle of the dot
-          var theta = (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (nomineeCounter[data[i].category] / nomineeDataByCategory[data[i].category].length)
+          var theta = (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * ((nomineeCounter[data[i].category] % (numNomineeInCategory / 2)) / (numNomineeInCategory/2))
           data[i].x = nomineeRadius * Math.cos(theta) + width / 2;
           data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
           data[i].level = "Nominee"
           nomineeCounter[data[i].category] += 1
+          if (numNomineeInCategory > 30 && nomineeCounter[data[i].category] == Math.floor(numNomineeInCategory / 2)) {
+            nomineeRadius += 3 // increment the radius so we get two layers of dots for more sectorlike shake
+          }
         } else {
-          var theta = (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (winnerCounter[data[i].category] / winnerDataByCategory[data[i].category].length)
+          var numWinnerInCategory = winnerDataByCategory[data[i].category].length
+          var theta = (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * ((winnerCounter[data[i].category] % (numWinnerInCategory / 2)) / (numWinnerInCategory/2))
           data[i].x = winnerRadius * Math.cos(theta) + width / 2;
           data[i].y = winnerRadius * Math.sin(theta) + height / 2;
           data[i].level = "Winner"
           winnerCounter[data[i].category] += 1
+          if (numWinnerInCategory > 4 && winnerCounter[data[i].category] == Math.floor(numWinnerInCategory / 2)) {
+            winnerRadius += 3 // increment the radius so we get two layers of dots for more sectorlike shake
+          }
         }
       }
       
