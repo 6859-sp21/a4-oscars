@@ -101,12 +101,12 @@
   </div>
   <!-- category selection -->
   <div class="text-center pt-3">
-    <button type="button" class="mx-1 btn btn-light">All</button>
-    <button type="button" class="mx-1 btn btn-outline-light">Best Director</button>
-    <button type="button" class="mx-1 btn btn-outline-light">Best Actor</button>
-    <button type="button" class="mx-1 btn btn-outline-light">Best Actress</button>
-    <button type="button" class="mx-1 btn btn-outline-light">Best Supporting Actor</button>
-    <button type="button" class="mx-1 btn btn-outline-light">Best Supporting Actress</button>
+    <button type="button" id="all-btn" class="mx-1 btn btn-light">All</button>
+    <button type="button" name="DIRECTING" id="director-btn" class="mx-1 btn btn-outline-light">Best Director</button>
+    <button type="button" name="ACTOR IN A LEADING ROLE" id="actor-btn" class="mx-1 btn btn-outline-light">Best Actor</button>
+    <button type="button" name="ACTRESS IN A LEADING ROLE" id="actress-btn" class="mx-1 btn btn-outline-light">Best Actress</button>
+    <button type="button" name="ACTOR IN A SUPPORTING ROLE" id="sup-actor-btn" class="mx-1 btn btn-outline-light">Best Supporting Actor</button>
+    <button type="button" name="ACTRESS IN A SUPPORTING ROLE" id="sup-actress-btn" class="mx-1 btn btn-outline-light">Best Supporting Actress</button>
   </div>
   <!-- graph -->
   <div id="main">
@@ -157,63 +157,68 @@
     
     function update(data, startYear, endYear, categories) {  
       // first, filter data to year range
-      let filteredData = data.filter(d => d.year_ceremony >= startYear && d.year_ceremony <= endYear)
-      var winnerDataByCategory = categories.map(c => {
-        return filteredData.filter(d => d.winner == "TRUE" && d.category == c)
-      })
+      let filteredData = data.filter(d => d.year_ceremony >= startYear && d.year_ceremony <= endYear && categories.includes(d.category))
+      var winnerDataByCategory = categories.reduce(function(map, category) {
+        map[category] = data.filter(d => d.category == category && d.winner == "TRUE");
+        return map;
+      }, {})
 
-      var nomineeDataByCategory = categories.map(c => {
-        return filteredData.filter(d => d.winner == "FALSE" && d.category == c)
-      })
+      var nomineeDataByCategory = categories.reduce(function(map, category) {
+        map[category] = data.filter(d => d.category == category && d.winner == "FALSE");
+        return map;
+      }, {})
 
       var numDataPoints = filteredData.length;      
       var winnerData = filteredData.filter(d => d.winner === "TRUE" && d.year_ceremony >= startYear && d.year_ceremony <= endYear);
       var numWinners = winnerData.length;
 
       // CALCULATE POSITION OF DOTS
-      
-      let numNomineesSeen = 0;
-      let numWinnersSeen = 0;
+
       // we position the nominees in a 1 layer ring, and the physics
       // simulation will take care of repelling the overlaps
       let nomineeRadius = Math.max(Math.sqrt(numWinners*300), 120)
       let winnerRadius = Math.max(numWinners * 0.5, 45)
 
-      // separate sectors by 10 degrees
+      // separate sectors by 36 degrees
       var sectorSeparation = 2 * Math.PI / 10.0;
       // the arc angle of each sector
-      var arcAngle = (2 * Math.PI - categories.length * sectorSeparation) / categories.length
+      let arcAngle = (2 * Math.PI - categories.length * sectorSeparation) / categories.length
+      if (categories.length == 1) {
+        arcAngle = 2 * Math.PI
+      }
+
+      var nomineeCounter = categories.reduce(function(map, category) {
+        map[category] = 0;
+        return map;
+      }, {})
+
+      var winnerCounter = categories.reduce(function(map, category) {
+        map[category] = 0;
+        return map;
+      }, {})
+
+      for (let i = 0; i < data.length; i++) {
+        if (data[i].year_ceremony < startYear || data[i].year_ceremony > endYear || !categories.includes(data[i].category)) {
+          continue
+        }
+
+        // if we're looking at a nominee
+        if (data[i].winner === "FALSE") {
+          // calculate angle of the dot
+          var theta = (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (nomineeCounter[data[i].category] / nomineeDataByCategory[data[i].category].length)
+          data[i].x = nomineeRadius * Math.cos(theta) + width / 2;
+          data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
+          data[i].level = "Nominee"
+          nomineeCounter[data[i].category] += 1
+        } else {
+          var theta = (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (winnerCounter[data[i].category] / winnerDataByCategory[data[i].category].length)
+          data[i].x = winnerRadius * Math.cos(theta) + width / 2;
+          data[i].y = winnerRadius * Math.sin(theta) + height / 2;
+          data[i].level = "Winner"
+          winnerCounter[data[i].category] += 1
+        }
+      }
       
-      // map the nominees to the outside ring
-      for (let i = 0; i < nomineeDataByCategory.length; i++) {
-        var categoryData = nomineeDataByCategory[i]
-        var numNomineesInCategory = categoryData.length
-        var startAngle = (sectorSeparation + arcAngle) * i
-        for (let j = 0; j < numNomineesInCategory; j++) {
-          var angleOffset = arcAngle / numNomineesInCategory * j
-          categoryData[j].x = nomineeRadius * Math.cos(startAngle + angleOffset) + width / 2;
-          categoryData[j].y = nomineeRadius * Math.sin(startAngle + angleOffset) + height / 2;
-          categoryData[j].level = "Nominee"
-        }
-      }
-
-      // map winners to inside ring
-      for (let i = 0; i < winnerDataByCategory.length; i++) {
-        var categoryData = winnerDataByCategory[i]
-        var nomWinnersInCategory = categoryData.length
-        var startAngle = (sectorSeparation + arcAngle) * i
-        for (let j = 0; j < nomWinnersInCategory; j++) {
-          var angleOffset = arcAngle / nomWinnersInCategory * j
-          categoryData[j].x = winnerRadius * Math.cos(startAngle + angleOffset) + width / 2;
-          categoryData[j].y = winnerRadius * Math.sin(startAngle + angleOffset) + height / 2;
-          categoryData[j].level = "Winner"
-        }
-      }
-      // combine newly positioned data into dataset 
-      var positionedData = [].concat.apply([], winnerDataByCategory).concat([].concat.apply([], nomineeDataByCategory))
-      // merge data with the dates that don't belong to the range. this is to keep the data join working.
-      var mergedData = positionedData.concat(data.filter(d => d.year_ceremony < startYear || d.year_ceremony > endYear))
-
       // default color scale
       // color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.fixed_race));
       // customized color scale
@@ -222,7 +227,7 @@
         .range(['#615516', '#b8a22a', '#CE5E33', '#1F848B', '#9C29B1'])
       var node = graphsvg
         .selectAll(".graph-circle")
-        .data(mergedData, d => d.id);
+        .data(data, d => d.id);
       node.join(
         enter => enter.append("circle")
           .classed("graph-circle", true)
@@ -249,7 +254,7 @@
               }),
         update => update.attr("r", d => {
             // if the datapoint is within range, it has a radius of 2. otherwise, we hide it with radius 0
-            if (d.year_ceremony >= startYear && d.year_ceremony <= endYear) {
+            if (d.year_ceremony >= startYear && d.year_ceremony <= endYear && categories.includes(d.category)) {
               return 2
             }
             return 0
@@ -323,7 +328,8 @@
           .style("font-family", "Didact Gothic")
           .style("text-transform", "lowercase");
 
-      update(csv_data, 1928, 2019, [actorCategory, actressCategory, actorSupCategory, actressSupCategory, directorCategory]);
+      let categories = [actorCategory, actressCategory, actorSupCategory, actressSupCategory, directorCategory]
+      update(csv_data, 1928, 2019, categories);
 
       var node = graphsvg.selectAll(".graph-circle")
 
@@ -362,7 +368,7 @@
         d3.select("#range-label").text(newRange.begin + " - " + newRange.end);
         var newData = getData(newRange.begin, newRange.end);
 
-        update(csv_data, newRange.begin, newRange.end, [actorCategory, actressCategory, actorSupCategory, actressSupCategory, directorCategory])
+        update(csv_data, newRange.begin, newRange.end, categories)
         
         var winners = newData.filter(d => d.winner == "TRUE");
         var nominees = newData.filter(d => d.winner == "FALSE")
@@ -371,6 +377,67 @@
       });
 
       slider.range(1928, 2019);
+
+      // // CATEGORY BUTTON LOGIC
+      function handleCategoryChange(category) {
+        return function(e){
+          // if all categories selected, then select only the "All" button
+          if (category == "all") {
+            // Outline all buttons except for the "All" button
+            var els = document.getElementsByClassName("btn")
+            for (el of els){
+              el.classList.remove('btn-light');
+              el.classList.add('btn-outline-light');
+            }
+            // fill the All button
+            document.getElementById("all-btn").classList.remove('btn-outline-light');
+            document.getElementById("all-btn").classList.add('btn-light');
+            categories = [actorCategory, actressCategory, actorSupCategory, actressSupCategory, directorCategory]
+          } else if (categories.includes(category)) {
+            if (categories.length == 5) { // if all categories were previously selected, then just select the single category
+              document.getElementById("all-btn").classList.remove('btn-light')
+              document.getElementById("all-btn").classList.add('btn-outline-light')
+              document.getElementsByName(category)[0].classList.remove('btn-outline-light')
+              document.getElementsByName(category)[0].classList.add('btn-light')
+              categories = [category]
+            } else { // the category was already selected, so remove it
+              document.getElementsByName(category)[0].classList.remove('btn-light')
+              document.getElementsByName(category)[0].classList.add('btn-outline-light')
+              var index = categories.indexOf(category);
+              categories.splice(index, 1);
+            }
+          } else { // the category is not yet selected, so select it.
+            if (categories.length == 4) { // this is the only category not yet selected. now that it is, select "All"
+              var els = document.getElementsByClassName("btn")
+              for (el of els){
+                el.classList.remove('btn-light');
+                el.classList.add('btn-outline-light');
+              }
+              document.getElementById("all-btn").classList.remove('btn-outline-light');
+              document.getElementById("all-btn").classList.add('btn-light');
+            } else {
+              var el = document.getElementsByName(category)[0]
+              el.classList.add('btn-light')
+              el.classList.remove('btn-outline-light')
+            }
+            categories.push(category)
+            // then, sort alphabetically so the graph is consistent in ordering
+            categories = categories.sort()
+          }
+          update(csv_data, slider.range().begin, slider.range().end, categories)
+          var newData = getData(slider.range().begin, slider.range().end).filter(d => categories.includes(d.category))
+          var winners = newData.filter(d => d.winner == "TRUE");
+          var nominees = newData.filter(d => d.winner == "FALSE")
+          simulationCircle.nodes(winners).alpha(0.1).alphaTarget(0).restart()
+          simulationRing.nodes(nominees).alpha(0.1).alphaTarget(0).restart()
+        }
+      }
+      document.getElementById("all-btn").addEventListener("click", handleCategoryChange("all"))
+      document.getElementById("actor-btn").addEventListener("click", handleCategoryChange(actorCategory))
+      document.getElementById("actress-btn").addEventListener("click", handleCategoryChange(actressCategory))
+      document.getElementById("sup-actor-btn").addEventListener("click", handleCategoryChange(actorSupCategory))
+      document.getElementById("sup-actress-btn").addEventListener("click", handleCategoryChange(actressSupCategory))
+      document.getElementById("director-btn").addEventListener("click", handleCategoryChange(directorCategory))
     });
   </script>
 </body>
