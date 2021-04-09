@@ -120,6 +120,11 @@
 
   <!-- JAVASCRIPT -->
   <script>
+    var actorCategory = "ACTOR IN A LEADING ROLE"
+    var actressCategory = "ACTRESS IN A LEADING ROLE"
+    var actorSupCategory = "ACTOR IN A SUPPORTING ROLE"
+    var actressSupCategory = "ACTRESS IN A SUPPORTING ROLE"
+    var directorCategory = "DIRECTING"
     var svgWidth = 1000
     var svgHeight = 1000
     var legendWidth = 400
@@ -150,44 +155,64 @@
       .style("background-color", "black")
       .style("color", "white")
     
-    function update(data, startYear, endYear) {      
-      var numDataPoints = data.length;
-      var nomineeData = data.filter(d => d.winner === "FALSE" && d.year_ceremony >= startYear && d.year_ceremony <= endYear);
-      var numNominees = nomineeData.length;
-      
-      var winnerData = data.filter(d => d.winner === "TRUE" && d.year_ceremony >= startYear && d.year_ceremony <= endYear);
+    function update(data, startYear, endYear, categories) {  
+      // first, filter data to year range
+      let filteredData = data.filter(d => d.year_ceremony >= startYear && d.year_ceremony <= endYear)
+      var winnerDataByCategory = categories.map(c => {
+        return filteredData.filter(d => d.winner == "TRUE" && d.category == c)
+      })
+
+      var nomineeDataByCategory = categories.map(c => {
+        return filteredData.filter(d => d.winner == "FALSE" && d.category == c)
+      })
+
+      var numDataPoints = filteredData.length;      
+      var winnerData = filteredData.filter(d => d.winner === "TRUE" && d.year_ceremony >= startYear && d.year_ceremony <= endYear);
       var numWinners = winnerData.length;
+
+      // CALCULATE POSITION OF DOTS
       
       let numNomineesSeen = 0;
       let numWinnersSeen = 0;
       // we position the nominees in a 1 layer ring, and the physics
       // simulation will take care of repelling the overlaps
-      let nomineeRadius = Math.max(Math.sqrt(numWinners*280), 120)
+      let nomineeRadius = Math.max(Math.sqrt(numWinners*300), 120)
       let winnerRadius = Math.max(numWinners * 0.5, 45)
-      for (let i = 0; i < numDataPoints; i++) {
-        // if the datapoint is not within range, let's ignore it
-        if (data[i].year_ceremony < startYear || data[i].year_ceremony > endYear) {
-          continue
-        }
-        // if we're looking at a nominee
-        if (data[i].winner === "FALSE") {
-          // calculate angle of the dot
-          var theta = numNomineesSeen * 2 * Math.PI / numNominees
-          // calculate coordinates relative to center of canvas
-          data[i].x = nomineeRadius * Math.cos(theta) + width / 2;
-          data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
-          data[i].level = "Nominee"
-          numNomineesSeen += 1;
-        }
-        else {
-          var theta = numWinnersSeen * 2 * Math.PI / numWinners
-          data[i].x = winnerRadius * Math.cos(theta) + width / 2;
-          data[i].y = winnerRadius * Math.sin(theta) + height / 2;
-          data[i].level = "Winner"
-          numWinnersSeen += 1
+
+      // separate sectors by 10 degrees
+      var sectorSeparation = 2 * Math.PI / 10.0;
+      // the arc angle of each sector
+      var arcAngle = (2 * Math.PI - categories.length * sectorSeparation) / categories.length
+      
+      // map the nominees to the outside ring
+      for (let i = 0; i < nomineeDataByCategory.length; i++) {
+        var categoryData = nomineeDataByCategory[i]
+        var numNomineesInCategory = categoryData.length
+        var startAngle = (sectorSeparation + arcAngle) * i
+        for (let j = 0; j < numNomineesInCategory; j++) {
+          var angleOffset = arcAngle / numNomineesInCategory * j
+          categoryData[j].x = nomineeRadius * Math.cos(startAngle + angleOffset) + width / 2;
+          categoryData[j].y = nomineeRadius * Math.sin(startAngle + angleOffset) + height / 2;
+          categoryData[j].level = "Nominee"
         }
       }
-      console.log('length', data.length)
+
+      // map winners to inside ring
+      for (let i = 0; i < winnerDataByCategory.length; i++) {
+        var categoryData = winnerDataByCategory[i]
+        var nomWinnersInCategory = categoryData.length
+        var startAngle = (sectorSeparation + arcAngle) * i
+        for (let j = 0; j < nomWinnersInCategory; j++) {
+          var angleOffset = arcAngle / nomWinnersInCategory * j
+          categoryData[j].x = winnerRadius * Math.cos(startAngle + angleOffset) + width / 2;
+          categoryData[j].y = winnerRadius * Math.sin(startAngle + angleOffset) + height / 2;
+          categoryData[j].level = "Winner"
+        }
+      }
+      // combine newly positioned data into dataset 
+      var positionedData = [].concat.apply([], winnerDataByCategory).concat([].concat.apply([], nomineeDataByCategory))
+      // merge data with the dates that don't belong to the range. this is to keep the data join working.
+      var mergedData = positionedData.concat(data.filter(d => d.year_ceremony < startYear || d.year_ceremony > endYear))
 
       // default color scale
       // color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.fixed_race));
@@ -197,7 +222,7 @@
         .range(['#615516', '#b8a22a', '#CE5E33', '#1F848B', '#9C29B1'])
       var node = graphsvg
         .selectAll(".graph-circle")
-        .data(data, d => d.id);
+        .data(mergedData, d => d.id);
       node.join(
         enter => enter.append("circle")
           .classed("graph-circle", true)
@@ -298,7 +323,7 @@
           .style("font-family", "Didact Gothic")
           .style("text-transform", "lowercase");
 
-      update(csv_data, 1928, 2019);
+      update(csv_data, 1928, 2019, [actorCategory, actressCategory, actorSupCategory, actressSupCategory, directorCategory]);
 
       var node = graphsvg.selectAll(".graph-circle")
 
@@ -337,7 +362,7 @@
         d3.select("#range-label").text(newRange.begin + " - " + newRange.end);
         var newData = getData(newRange.begin, newRange.end);
 
-        update(csv_data, newRange.begin, newRange.end)
+        update(csv_data, newRange.begin, newRange.end, [actorCategory, actressCategory, actorSupCategory, actressSupCategory, directorCategory])
         
         var winners = newData.filter(d => d.winner == "TRUE");
         var nominees = newData.filter(d => d.winner == "FALSE")
