@@ -159,16 +159,15 @@
       // first, filter data to year range
       let filteredData = data.filter(d => d.year_ceremony >= startYear && d.year_ceremony <= endYear && categories.includes(d.category))
       var winnerDataByCategory = categories.reduce(function(map, category) {
-        map[category] = data.filter(d => d.category == category && d.winner == "TRUE");
+        map[category] = filteredData.filter(d => d.category == category && d.winner == "TRUE");
         return map;
       }, {})
 
       var nomineeDataByCategory = categories.reduce(function(map, category) {
-        map[category] = data.filter(d => d.category == category && d.winner == "FALSE");
+        map[category] = filteredData.filter(d => d.category == category && d.winner == "FALSE");
         return map;
       }, {})
 
-      var numDataPoints = filteredData.length;      
       var winnerData = filteredData.filter(d => d.winner === "TRUE" && d.year_ceremony >= startYear && d.year_ceremony <= endYear);
       var numWinners = winnerData.length;
 
