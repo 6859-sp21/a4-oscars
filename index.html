@@ -171,12 +171,35 @@
       var winnerData = filteredData.filter(d => d.winner === "TRUE" && d.year_ceremony >= startYear && d.year_ceremony <= endYear);
       var numWinners = winnerData.length;
 
-      // CALCULATE POSITION OF DOTS
-
       // we position the nominees in a 1 layer ring, and the physics
       // simulation will take care of repelling the overlaps
-      let nomineeRadius = Math.max(Math.sqrt(numWinners*400), 120)
-      let winnerRadius = Math.max(Math.sqrt(numWinners * 80), 50)
+      let nomineeRadius = Math.max(Math.pow(numWinners*400, 0.51), 120)
+      let winnerRadius = Math.max(Math.sqrt(numWinners * 100), 50)
+
+      // DRAW CIRCLES AROUND NOMINEES AND WINNERS
+      var winnerCircleNode = graphsvg
+        .selectAll(".winner-circle")
+        .data([winnerRadius, nomineeRadius])
+      winnerCircleNode.join(
+        enter => enter.append("circle")
+          .classed("winner-circle", true)
+          .attr("cx", width / 2)
+          .attr("cy", height / 2)
+          .attr("r", winnerRadius * 1.3)
+          .style("fill", "#A7771C")
+          .style("stroke","#b8a22a")
+          .style("stroke-width", 8)
+          .style("opacity", .1),
+        update => update.transition()
+          .duration(300)
+          .attr("r", (d, i) => {
+            if (i == 0) return 1.3 * d;
+            return 1.25 * d;
+          }),
+        exit => exit.remove()
+      )
+
+      // CALCULATE POSITION OF DOTS
 
       // separate sectors by 36 degrees
       var sectorSeparation = 2 * Math.PI / 10.0;
@@ -203,26 +226,18 @@
 
         // if we're looking at a nominee
         if (data[i].winner === "FALSE") {
-          var numNomineeInCategory = nomineeDataByCategory[data[i].category].length
           // calculate angle of the dot
-          var theta = (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * ((nomineeCounter[data[i].category] % (numNomineeInCategory / 2)) / (numNomineeInCategory/2))
+          var theta = (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (nomineeCounter[data[i].category] / nomineeDataByCategory[data[i].category].length)
           data[i].x = nomineeRadius * Math.cos(theta) + width / 2;
           data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
           data[i].level = "Nominee"
           nomineeCounter[data[i].category] += 1
-          if (numNomineeInCategory > 30 && nomineeCounter[data[i].category] == Math.floor(numNomineeInCategory / 2)) {
-            nomineeRadius += 3 // increment the radius so we get two layers of dots for more sectorlike shake
-          }
         } else {
-          var numWinnerInCategory = winnerDataByCategory[data[i].category].length
-          var theta = (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * ((winnerCounter[data[i].category] % (numWinnerInCategory / 2)) / (numWinnerInCategory/2))
+          var theta = (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (winnerCounter[data[i].category] / winnerDataByCategory[data[i].category].length)
           data[i].x = winnerRadius * Math.cos(theta) + width / 2;
           data[i].y = winnerRadius * Math.sin(theta) + height / 2;
           data[i].level = "Winner"
           winnerCounter[data[i].category] += 1
-          if (numWinnerInCategory > 4 && winnerCounter[data[i].category] == Math.floor(numWinnerInCategory / 2)) {
-            winnerRadius += 3 // increment the radius so we get two layers of dots for more sectorlike shake
-          }
         }
       }
       
@@ -231,7 +246,7 @@
       // customized color scale
       color = d3.scaleOrdinal()
         .domain(['white', 'black', 'hispanic', 'asian', 'other'])
-        .range(['#615516', '#b8a22a', '#CE5E33', '#1F848B', '#9C29B1'])
+        .range(['#E6AB02', '#67A51F', '#7570B2', '#E7298A', '#D95F03'])
       var node = graphsvg
         .selectAll(".graph-circle")
         .data(data, d => d.id);
@@ -266,9 +281,12 @@
             }
             return 0
           }),
-        exit => exit.remove()
-      )   
+          exit => exit.remove()
+        )
+      
     }
+
+
 
     d3.csv("oscar_nominees_with_fixed_race.csv").then((csv_data) => {
       function getData(startYear, endYear) {
@@ -288,7 +306,7 @@
       // customized color scale
       color = d3.scaleOrdinal()
         .domain(['white', 'black', 'hispanic', 'asian', 'other'])
-        .range(['#615516', '#b8a22a', '#CE5E33', '#1F848B', '#9C29B1'])
+        .range(['#E6AB02', '#67A51F', '#7570B2', '#E7298A', '#D95F03'])
       // 1: LEGEND using D3-LEGEND (https://d3-legend.susielu.com/)
       // svg.append("g")
       //   .attr("class", "legend")
@@ -329,6 +347,45 @@
           .attr("y", function(d,i){ return (i+1)*25}) // 100 is where the first dot appears. 25 is the distance between dots
           // .style("fill", function(d){ return color(d)})
           .text(function(d){ return d})
+          .attr("text-anchor", "left")
+          .style("alignment-baseline", "middle")
+          .style("fill", "#b8b8b8")
+          .style("font-family", "Didact Gothic")
+          .style("text-transform", "lowercase");
+      
+      // legend for the winner / nominee circles
+      var legendCircleRadii = [15, 40]
+      var legendCircleLabels = [{y: 300, text: "Winners"}, {y: 270, text: "Nominees"}]
+      legendsvg.selectAll('legendCircles')
+        .data(legendCircleRadii)
+        .enter()
+        .append("circle")
+          .attr("cx", 120)
+          .attr("cy", 300)
+          .attr("r", d => d)
+          .attr("fill", "#b8a22a")
+          .style("stroke","#b8a22a")
+          .style("stroke-width", 8)
+          .attr("opacity", .2)
+      // draw the lines that label the winner and nominee legend circles
+      legendsvg.selectAll('legendCircleLines')
+        .data(legendCircleLabels)
+        .enter()
+        .append('line')
+          .style("stroke", "#F8F9FA")
+          .style("stroke-width", 2)
+          .attr("x1", 120)
+          .attr("y1", d => d.y)
+          .attr("x2", 180)
+          .attr("y2", d => d.y);
+      
+      legendsvg.selectAll('legendCircleLines')
+        .data(legendCircleLabels)
+        .enter()
+        .append('text')
+          .attr("x", 190)
+          .attr("y", d => d.y) // 100 is where the first dot appears. 25 is the distance between dots
+          .text(d => d.text)
           .attr("text-anchor", "left")
           .style("alignment-baseline", "middle")
           .style("fill", "#b8b8b8")
