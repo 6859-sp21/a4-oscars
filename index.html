@@ -208,6 +208,8 @@
       if (categories.length == 1) {
         arcAngle = 2 * Math.PI
       }
+      // offset angle to maintain vertical symmetry of the graph
+      var offsetAngle = sectorSeparation + arcAngle / 2 + Math.PI / 2;
 
       var nomineeCounter = categories.reduce(function(map, category) {
         map[category] = 0;
@@ -227,13 +229,13 @@
         // if we're looking at a nominee
         if (data[i].winner === "FALSE") {
           // calculate angle of the dot
-          var theta = (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (nomineeCounter[data[i].category] / nomineeDataByCategory[data[i].category].length)
+          var theta = offsetAngle + (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (nomineeCounter[data[i].category] / nomineeDataByCategory[data[i].category].length)
           data[i].x = nomineeRadius * Math.cos(theta) + width / 2;
           data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
           data[i].level = "Nominee"
           nomineeCounter[data[i].category] += 1
         } else {
-          var theta = (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (winnerCounter[data[i].category] / winnerDataByCategory[data[i].category].length)
+          var theta = offsetAngle + (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (winnerCounter[data[i].category] / winnerDataByCategory[data[i].category].length)
           data[i].x = winnerRadius * Math.cos(theta) + width / 2;
           data[i].y = winnerRadius * Math.sin(theta) + height / 2;
           data[i].level = "Winner"
