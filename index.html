@@ -255,6 +255,69 @@
         }
       }
 
+      // // CREATE CATEGORY LABEL ARCS
+      var arcRadius = nomineeRadius * 1.25 + 20
+      function arcGenerator(index) {
+        var startAngle = categories.length === 1 ? arcAngle / 2 : index * (arcAngle + sectorSeparation) + offsetAngle
+        var endAngle = categories.length === 1 ? arcAngle : startAngle + arcAngle
+        let sweep = 1
+        let radius = arcRadius
+        if (startAngle > -0.3 && endAngle < Math.PI + 0.3) {
+          let temp = endAngle
+          endAngle = startAngle
+          startAngle = temp
+          sweep = 0
+          radius += 15
+        }
+        let startX = Math.cos(startAngle) * radius + width / 2
+        let startY = Math.sin(startAngle) * radius + height / 2
+        let endX = Math.cos(endAngle) * radius + width / 2
+        let endY = Math.sin(endAngle) * radius + height / 2
+        return "M " + startX + "," +  startY + " A " + radius + "," + radius + " 0 0," + sweep + " " + endX + "," + endY;
+      }
+      function categoryName(name) {
+        switch(name) {
+          case "DIRECTING": return "best director"
+          case "ACTOR IN A LEADING ROLE": return "best actor"
+          case "ACTRESS IN A LEADING ROLE": return "best actress"
+          case "ACTOR IN A SUPPORTING ROLE": return "best supporting actor"
+          case "ACTRESS IN A SUPPORTING ROLE": return "best supporting actress"
+          return ""
+        }
+      }
+      function categoryID(name) {
+        switch(name) {
+          case "DIRECTING": return 1
+          case "ACTOR IN A LEADING ROLE": return 2
+          case "ACTRESS IN A LEADING ROLE": return 3
+          case "ACTOR IN A SUPPORTING ROLE": return 4
+          case "ACTRESS IN A SUPPORTING ROLE": return 5
+          return ""
+        }
+      }
+      graphgElem.selectAll(".arc-path").remove()
+      var categoryLabels = graphgElem.selectAll(".category-arc-labels")
+        .data(categories, d=>categoryID(d))
+      categoryLabels.join(
+        enter => enter.append("path")
+            .classed("arc-path", true)
+            .attr("id", d => "arcpath-" + d) //Unique id of the path
+            .attr("d", (d,i) => arcGenerator(i)) //SVG path
+            .style("stroke", "none")
+            .style("fill", "none")
+            .each(function(d){ this._current = d; }),
+        update => update.attr("d", (d,i) => arcGenerator(i)),
+        exit => exit.remove()
+      )
+      categoryLabels.enter().append("text")
+        .style('fill', 'white')
+        .style("font-size", "30px")
+        .append("textPath") //append a textPath to the text element
+          .attr("xlink:href", d => "#arcpath-" + d) //place the ID of the path here
+          .style("text-anchor","middle") //place the text halfway on the arc
+          .attr("startOffset", "50%")
+          .text(d => categoryName(d));
+
       // ZOOM TO FIT THE DOTS
       var resetScale = 300 / nomineeRadius
       d3.select('.graph-g')
