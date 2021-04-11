@@ -159,9 +159,12 @@
       .append("div")
       .style("position", "absolute")
       .style("visibility", "hidden")
-      .style("background-color", "black")
-      .style("color", "white")
-    
+      .style("background", "lightskyblue")
+      .style("font", "serif")
+      .style("font-size", "16px")
+      .style("border-radius", "7px")
+      .style("padding", "3px")
+
     function update(data, startYear, endYear, categories) {  
       // first, filter data to year range
       let filteredData = data.filter(d => d.year_ceremony >= startYear && d.year_ceremony <= endYear && categories.includes(d.category))
@@ -285,7 +288,7 @@
               tooltip
               .style("top", (d3.event.pageY + 5) + "px")
               .style("left", (d3.event.pageX + 5) + "px")
-              .html(d.level + "<br>" + "Name: " + d.name + "<br>Film: " + d.film + "<br>Award: " + d.category + "<br>Race: " + d.fixed_race + "<br>Year:" + d.year_ceremony)
+              .html("Name: " + d.name + "<br>Film: " + d.film + "<br>Year: " + d.year_ceremony)
               })
           .on("mouseout", function(d){
               d3.select(this).style("stroke", color(d.fixed_race))
@@ -379,7 +382,15 @@
           .style("alignment-baseline", "middle")
           .style("fill", "#b8b8b8")
           .style("font-family", "Didact Gothic")
-          .style("text-transform", "lowercase");
+          .style("text-transform", "lowercase")
+          .on("mouseover", function(d) {
+             d3.select(this).style("font-weight", 900).style("text-decoration", "underline");
+            graphsvg.selectAll("." + d).style("stroke", "white")
+          })
+          .on("mouseout", function(d) {
+            d3.select(this).style("font-weight", 300).style("text-decoration", "none");
+            graphsvg.selectAll("." + d).style("stroke", color(d))
+          });
       
       // legend for the winner / nominee circles
       var legendCircleRadii = [15, 40]
@@ -419,14 +430,7 @@
           .style("fill", "#b8b8b8")
           .style("font-family", "Didact Gothic")
           .style("text-transform", "lowercase")
-          .on("mouseover", function(d) {
-             d3.select(this).style("font-weight", 900).style("text-decoration", "underline");
-            graphsvg.selectAll("." + d).style("stroke", "white")
-          })
-          .on("mouseout", function(d) {
-            d3.select(this).style("font-weight", 300).style("text-decoration", "none");
-            graphsvg.selectAll("." + d).style("stroke", color(d))
-          })
+
 
       let categories = [actorCategory, actressCategory, actorSupCategory, actressSupCategory, directorCategory]
       update(csv_data, 1928, 2019, categories);
