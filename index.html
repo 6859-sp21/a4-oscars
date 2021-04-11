@@ -309,7 +309,7 @@
       )
       categoryLabels.enter().append("text")
         .style('fill', 'white')
-        .style("font-size", "30px")
+        .style("font-size", "28px")
         .append("textPath") //append a textPath to the text element
           .attr("xlink:href", d => "#arcpath-" + d) //place the ID of the path here
           .style("text-anchor","middle") //place the text halfway on the arc
@@ -447,7 +447,7 @@
           .style("font-family", "Didact Gothic")
           .style("text-transform", "lowercase")
           .on("mouseover", function(d) {
-             d3.select(this).style("font-weight", 900).style("text-decoration", "underline");
+             d3.select(this).style("font-weight", 900).style("text-decoration", "underline").style("cursor","default");
             graphsvg.selectAll("." + d).style("stroke", "white")
           })
           .on("mouseout", function(d) {
