@@ -137,7 +137,6 @@
         .attr("height", svgHeight);
 
     function zoomed(scale) {
-      console.log(d3.event.transform)
       graphgElem.attr("transform", d3.event.transform)
     }
 
@@ -146,7 +145,13 @@
       .append("g")
       .classed("graph-g", true)
       .call(zoom)
-      .append("g");
+      .append("g")
+    graphgElem.append("rect")
+      .attr("x", -10000)
+      .attr("y", -10000)
+      .style("fill", "#1d1c1c")
+      .attr("height", 20000)
+      .attr("width", 20000)
 
     var legendsvg = d3.select("#legend")
       .append("svg")
@@ -180,8 +185,8 @@
 
       // we position the nominees in a 1 layer ring, and the physics
       // simulation will take care of repelling the overlaps
-      let nomineeRadius = Math.max(Math.pow(numWinners*400, 0.51), 120)
-      let winnerRadius = Math.max(Math.sqrt(numWinners * 100), 50)
+      let nomineeRadius = Math.min(380, Math.max(Math.pow(numWinners*400, 0.51), 140))
+      let winnerRadius = Math.max(Math.sqrt(numWinners * 90), 50)
 
       // DRAW CIRCLES AROUND NOMINEES AND WINNERS
       var winnerCircleNode = graphgElem
@@ -269,7 +274,7 @@
       node.join(
         enter => enter.append("circle")
           .classed("graph-circle", true)
-          .attr("r", 2)
+          .attr("r", 1.5)
           .attr("cx", width / 2)
           .attr("cy", height / 2)
           .style("fill", d => color(d.fixed_race))
@@ -293,7 +298,7 @@
         update => update.attr("r", d => {
             // if the datapoint is within range, it has a radius of 2. otherwise, we hide it with radius 0
             if (d.year_ceremony >= startYear && d.year_ceremony <= endYear && categories.includes(d.category)) {
-              return 2
+              return 1.5
             }
             return 0
           }),
