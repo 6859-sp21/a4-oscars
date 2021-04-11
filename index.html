@@ -130,16 +130,23 @@
     var legendWidth = 400
     var width = 1000
     var height = 1000
+    
     var graphsvg = d3.select("#graph")
         .append("svg")
         .attr("width", svgWidth)
-        .attr("height", svgHeight)
-        // .attr("transform", "translate(400, 0)")  // pushes viz to right + up
-        .call(d3.zoom().on("zoom", function () {
-          graphsvg.attr("transform", d3.event.transform)
-        }))
-        .append("g");
+        .attr("height", svgHeight);
 
+    function zoomed(scale) {
+      console.log(d3.event.transform)
+      graphgElem.attr("transform", d3.event.transform)
+    }
+
+    var zoom = d3.zoom().on("zoom", zoomed);
+    var graphgElem = graphsvg
+      .append("g")
+      .classed("graph-g", true)
+      .call(zoom)
+      .append("g");
 
     var legendsvg = d3.select("#legend")
       .append("svg")
@@ -177,7 +184,7 @@
       let winnerRadius = Math.max(Math.sqrt(numWinners * 100), 50)
 
       // DRAW CIRCLES AROUND NOMINEES AND WINNERS
-      var winnerCircleNode = graphsvg
+      var winnerCircleNode = graphgElem
         .selectAll(".winner-circle")
         .data([winnerRadius, nomineeRadius])
       winnerCircleNode.join(
@@ -209,7 +216,7 @@
         arcAngle = 2 * Math.PI
       }
       // offset angle to maintain vertical symmetry of the graph
-      var offsetAngle = sectorSeparation + arcAngle / 2 + Math.PI / 2;
+      var offsetAngle = sectorSeparation + arcAngle / 2 - Math.PI / 2;
 
       var nomineeCounter = categories.reduce(function(map, category) {
         map[category] = 0;
@@ -242,14 +249,21 @@
           winnerCounter[data[i].category] += 1
         }
       }
-      
+
+      // ZOOM TO FIT THE DOTS
+      var resetScale = 300 / nomineeRadius
+      d3.select('.graph-g')
+        .transition()
+        .duration(750)
+          .call(zoom.transform, d3.zoomIdentity);
+
       // default color scale
       // color = d3.scaleOrdinal(d3.schemeCategory10).domain(data.map(d => d.fixed_race));
       // customized color scale
       color = d3.scaleOrdinal()
         .domain(['white', 'black', 'hispanic', 'asian', 'other'])
         .range(['#E6AB02', '#67A51F', '#7570B2', '#E7298A', '#D95F03'])
-      var node = graphsvg
+      var node = graphgElem
         .selectAll(".graph-circle")
         .data(data, d => d.id);
       node.join(
@@ -285,7 +299,6 @@
           }),
           exit => exit.remove()
         )
-      
     }
 
 
@@ -397,7 +410,7 @@
       let categories = [actorCategory, actressCategory, actorSupCategory, actressSupCategory, directorCategory]
       update(csv_data, 1928, 2019, categories);
 
-      var node = graphsvg.selectAll(".graph-circle")
+      var node = graphgElem.selectAll(".graph-circle")
 
       var winnerData = csv_data.filter(d => d.winner === "TRUE");
       var simulationCircle = d3.forceSimulation()
