@@ -183,7 +183,7 @@
 
       // we position the nominees in a 1 layer ring, and the physics
       // simulation will take care of repelling the overlaps
-      let nomineeRadius = Math.min(380, Math.max(Math.pow(numWinners*400, 0.51), 140))
+      let nomineeRadius = Math.min(380, Math.max(Math.pow(numWinners*400, 0.51), 155))
       let winnerRadius = Math.max(Math.sqrt(numWinners * 90), 50)
 
       // DRAW CIRCLES AROUND NOMINEES AND WINNERS
@@ -256,8 +256,8 @@
       // // CREATE CATEGORY LABEL ARCS
       var arcRadius = nomineeRadius * 1.25 + 20
       function arcGenerator(index) {
-        var startAngle = categories.length === 1 ? arcAngle / 2 : index * (arcAngle + sectorSeparation) + offsetAngle
-        var endAngle = categories.length === 1 ? arcAngle : startAngle + arcAngle
+        var startAngle = categories.length === 1 ? arcAngle / 2 : index * (arcAngle + sectorSeparation) + offsetAngle - 0.041 * Math.PI
+        var endAngle = categories.length === 1 ? arcAngle : startAngle + arcAngle + Math.PI / 11.0
         let sweep = 1
         let radius = arcRadius
         if (startAngle > -0.3 && endAngle < Math.PI + 0.3) {
@@ -309,7 +309,7 @@
       )
       categoryLabels.enter().append("text")
         .style('fill', 'white')
-        .style("font-size", "28px")
+        .style("font-size", "20px")
         .append("textPath") //append a textPath to the text element
           .attr("xlink:href", d => "#arcpath-" + d) //place the ID of the path here
           .style("text-anchor","middle") //place the text halfway on the arc
