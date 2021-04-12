@@ -79,6 +79,15 @@
       padding-top: 30px;
     }
 
+    #footer {
+      color: white;
+    }
+
+    #zoom {
+      color: white;
+      transform: translate(75px, 150px);
+    }
+
   </style>
 </head>
 <body>
@@ -88,6 +97,7 @@
       <h1 id="title">OSCARS</h1>
       <h2>winners & nominees by race</h2>
     </div>
+
   </div>
   <!-- slider -->
   <div id="slider-section">
@@ -106,11 +116,15 @@
   <!-- graph -->
   <div id="main">
     <div id="graph"></div>
-    <div id="legend"></div>
+    <div id="legend">
+      <div id="zoom"> &#8678; Scroll to Zoom</div>
+    </div>
   </div>
 
   <div id="footer">
-    Adapted from: https://www.d3-graph-gallery.com/graph/circularpacking_basic.html, 4/3/2021
+    <br><br>
+    Adapted from: https://www.d3-graph-gallery.com/graph/circularpacking_basic.html, 4/3/2021 <br>
+    Data retrieved from: https://data.world/crowdflower/academy-awards-demographics
   </div>
 
   <!-- JAVASCRIPT -->
@@ -160,7 +174,7 @@
       .style("position", "absolute")
       .style("visibility", "hidden")
       .style("background", "lightskyblue")
-      .style("font", "serif")
+      .style("font-family", "'Didact Gothic', sans-serif")
       .style("font-size", "16px")
       .style("border-radius", "7px")
       .style("padding", "3px")
