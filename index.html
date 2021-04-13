@@ -13,7 +13,7 @@
     h1 { 
       color: 	#b8a22a; 
       font-family: 'Didact Gothic', sans-serif; 
-      font-size: 60px;
+      font-size: 3rem;
       line-height: 1; 
       margin-left: 40px;
       margin-top: 20px;
@@ -39,8 +39,8 @@
 
     #main {
       display: flex;
-      width: 1500px;
       margin: auto;
+      width: 1500px;
     }
 
     #slider-section {
@@ -79,8 +79,10 @@
       padding-top: 30px;
     }
 
-    #footer {
+    .sources {
       color: white;
+      position: absolute;
+      bottom: 20px;
     }
 
     #zoom {
@@ -91,42 +93,48 @@
   </style>
 </head>
 <body>
-  <div id="header" style="display: flex; flex-direction: row; align-items: center; margin-left: 50px;">
-    <img src="./oscars_icon.png" width="100" height="130">
-    <div style="display: flex; flex-direction: column;">
-      <h1 id="title">OSCARS</h1>
-      <h2>winners & nominees by race</h2>
+  <div class="row">
+    <div class="col-sm-3 p-3 position-sticky" style="top: 0; height: 100vh; background-color: #2C251E;">
+      <div id="header" style="display: flex; flex-direction: row; align-items: center; margin-left: 50px;">
+        <img src="./oscars_icon.png" width="100" height="130">
+        <div style="display: flex; flex-direction: column;">
+          <h1 id="title">OSCARS</h1>
+          <h2>winners & nominees by race</h2>
+        </div>
+      </div>
+      <div class="sources p-3">
+        Authors: Jenning Chen, Ashwin Srinivasan, Lisa Yoo
+        <br />
+        <i>
+          Data retrieved from: https://data.world/crowdflower/academy-awards-demographics
+        </i>
+      </div>
     </div>
-
-  </div>
-  <!-- slider -->
-  <div id="slider-section">
-    <div id="range-label">1928 - 2019</div>
-    <div id="slider-container"></div>
-  </div>
-  <!-- category selection -->
-  <div class="text-center pt-3">
-    <button type="button" id="all-btn" class="mx-1 btn btn-light">all</button>
-    <button type="button" name="DIRECTING" id="director-btn" class="mx-1 btn btn-outline-light">best director</button>
-    <button type="button" name="ACTOR IN A LEADING ROLE" id="actor-btn" class="mx-1 btn btn-outline-light">best actor</button>
-    <button type="button" name="ACTRESS IN A LEADING ROLE" id="actress-btn" class="mx-1 btn btn-outline-light">best actress</button>
-    <button type="button" name="ACTOR IN A SUPPORTING ROLE" id="sup-actor-btn" class="mx-1 btn btn-outline-light">best supporting actor</button>
-    <button type="button" name="ACTRESS IN A SUPPORTING ROLE" id="sup-actress-btn" class="mx-1 btn btn-outline-light">best supporting actress</button>
-  </div>
-  <!-- graph -->
-  <div id="main">
-    <div id="graph"></div>
-    <div id="legend">
-      <div id="zoom"> &#8678; Scroll to Zoom</div>
+    <div class="col-sm-9">
+      <!-- slider -->
+      <div id="slider-section">
+        <div id="range-label">1928 - 2019</div>
+        <div id="slider-container"></div>
+      </div>
+      <!-- category selection -->
+      <div class="text-center pt-3">
+        <button type="button" id="all-btn" class="mx-1 btn btn-light">all</button>
+        <button type="button" name="DIRECTING" id="director-btn" class="mx-1 btn btn-outline-light">best director</button>
+        <button type="button" name="ACTOR IN A LEADING ROLE" id="actor-btn" class="mx-1 btn btn-outline-light">best actor</button>
+        <button type="button" name="ACTRESS IN A LEADING ROLE" id="actress-btn" class="mx-1 btn btn-outline-light">best actress</button>
+        <button type="button" name="ACTOR IN A SUPPORTING ROLE" id="sup-actor-btn" class="mx-1 btn btn-outline-light">best supporting actor</button>
+        <button type="button" name="ACTRESS IN A SUPPORTING ROLE" id="sup-actress-btn" class="mx-1 btn btn-outline-light">best supporting actress</button>
+      </div>
+      <!-- graph -->
+      <div id="main">
+        <div id="graph"></div>
+        <div id="legend">
+          <div id="zoom"> &#8678; Scroll to Zoom</div>
+        </div>
+      </div>
     </div>
   </div>
-
-  <div id="footer">
-    <br><br>
-    Adapted from: https://www.d3-graph-gallery.com/graph/circularpacking_basic.html, 4/3/2021 <br>
-    Data retrieved from: https://data.world/crowdflower/academy-awards-demographics
-  </div>
-
+  
   <!-- JAVASCRIPT -->
   <script>
     var actorCategory = "ACTOR IN A LEADING ROLE"
@@ -134,11 +142,11 @@
     var actorSupCategory = "ACTOR IN A SUPPORTING ROLE"
     var actressSupCategory = "ACTRESS IN A SUPPORTING ROLE"
     var directorCategory = "DIRECTING"
-    var svgWidth = 1000
-    var svgHeight = 1000
+    var svgWidth = 1200
+    var svgHeight = 800
     var legendWidth = 400
-    var width = 1000
-    var height = 1000
+    var width = 1200
+    var height = 800
     
     var graphsvg = d3.select("#graph")
         .append("svg")
@@ -165,7 +173,7 @@
     var legendsvg = d3.select("#legend")
       .append("svg")
         .attr("width", legendWidth)
-        .attr("height", svgHeight)
+        .attr("height", svgHeight - 300)
         .attr("transform", "translate(0, 200)"); // pushes viz to right + up
     legendsvg.append("g");
 
@@ -197,8 +205,8 @@
 
       // we position the nominees in a 1 layer ring, and the physics
       // simulation will take care of repelling the overlaps
-      let nomineeRadius = Math.min(380, Math.max(Math.pow(numWinners*400, 0.51), 155))
-      let winnerRadius = Math.max(Math.sqrt(numWinners * 90), 50)
+      let nomineeRadius = Math.min(295, Math.max(Math.pow(numWinners*400, 0.51), 155))
+      let winnerRadius = Math.max(Math.sqrt(numWinners * 60), 60)
 
       // DRAW CIRCLES AROUND NOMINEES AND WINNERS
       var winnerCircleNode = graphgElem
@@ -226,7 +234,7 @@
       // CALCULATE POSITION OF DOTS
 
       // separate sectors by 36 degrees
-      var sectorSeparation = 2 * Math.PI / 10.0;
+      var sectorSeparation = 2 * Math.PI / 12.0;
       // the arc angle of each sector
       let arcAngle = (2 * Math.PI - categories.length * sectorSeparation) / categories.length
       if (categories.length == 1) {
@@ -274,7 +282,7 @@
       }
 
       // // CREATE CATEGORY LABEL ARCS
-      var arcRadius = nomineeRadius * 1.25 + 20
+      var arcRadius = nomineeRadius * 1.25 + 17
       function arcGenerator(index) {
         var startAngle = categories.length === 1 ? arcAngle / 2 : index * (arcAngle + sectorSeparation) + offsetAngle - 0.041 * Math.PI
         var endAngle = categories.length === 1 ? arcAngle : startAngle + arcAngle + Math.PI / 11.0
@@ -355,22 +363,22 @@
       node.join(
         enter => enter.append("circle")
           .attr("class", function(d){return "graph-circle " + d.fixed_race})
-          .attr("r", 1.5)
+          .attr("r", 1)
           .attr("cx", width / 2)
           .attr("cy", height / 2)
           .style("fill", d => color(d.fixed_race))
           .style("fill-opacity", 1)
           .attr("stroke", d => color(d.fixed_race))
           .style("stroke-width", 4)
-          .on("mouseover", function(){
+          .on("mouseover", function(d){
               d3.select(this).style("stroke", "white")
-              tooltip
+              tooltip 
               .style("visibility", "visible")
               })
           .on("mousemove", function(d){
               tooltip
-              .style("top", (d3.event.pageY + 5) + "px")
-              .style("left", (d3.event.pageX + 5) + "px")
+              .style("top", (d3.event.pageY - 85) + "px")
+              .style("left", (d3.event.pageX -475) + "px")
               .html("Name: " + d.name + "<br>Film: " + d.film + "<br>Year: " + d.year_ceremony)
               })
           .on("mouseout", function(d){
@@ -524,7 +532,7 @@
       var simulationCircle = d3.forceSimulation()
         .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
         .force("charge", d3.forceManyBody().strength(0)) // Nodes are attracted one each other of value is > 0
-        .force("collide", d3.forceCollide().strength(0.2).radius(6).iterations(1)) // Force that avoids circle overlapping
+        .force("collide", d3.forceCollide().strength(0.2).radius(5).iterations(1)) // Force that avoids circle overlapping
 
       simulationCircle
         .nodes(winnerData)
@@ -538,7 +546,7 @@
       var simulationRing = d3.forceSimulation()
         .force("center", d3.forceCenter().x(width / 2).y(height / 2)) // Attraction to the center of the svg area
         .force("charge", d3.forceManyBody().strength(0)) // Nodes are attracted one each other of value is > 0
-        .force("collide", d3.forceCollide().strength(0.2).radius(6).iterations(1)) // Force that avoids circle overlapping
+        .force("collide", d3.forceCollide().strength(0.2).radius(5).iterations(1)) // Force that avoids circle overlapping
 
       simulationRing
         .nodes(nomineeData)
