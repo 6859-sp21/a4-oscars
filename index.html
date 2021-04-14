@@ -106,6 +106,7 @@
         Authors: Jenning Chen, Ashwin Srinivasan, Lisa Yoo
         <br />
         <i>
+          Adapted from: https://www.d3-graph-gallery.com/graph/circularpacking_basic.html, 4/3/2021 <br>
           Data retrieved from: https://data.world/crowdflower/academy-awards-demographics
         </i>
       </div>
@@ -362,15 +363,15 @@
         .data(data, d => d.id);
       node.join(
         enter => enter.append("circle")
-          .attr("class", function(d){return "graph-circle " + d.fixed_race})
+          .attr("class", function(d){return "graph-circle " + d.fixed_race + " " + d.winner})
           .attr("r", 1)
           .attr("cx", width / 2)
           .attr("cy", height / 2)
           .style("fill", d => color(d.fixed_race))
-          .style("fill-opacity", 1)
+          .style("opacity", 1)
           .attr("stroke", d => color(d.fixed_race))
-          .style("stroke-width", 4)
-          .on("mouseover", function(d){
+          .style("stroke-width", 0.5)
+          .on("mouseover", function(){
               d3.select(this).style("stroke", "white")
               tooltip 
               .style("visibility", "visible")
@@ -446,12 +447,21 @@
         .append("circle")
         .on("mouseover", function(d) {
             d3.select(".label-" + d).style("font-weight", 900).style("text-decoration", "underline");
-            graphsvg.selectAll("." + d).style("stroke", "white")
+          for (var i = 0; i < keys.length; i++) {
+            if (keys[i] !== d) {
+              graphsvg.selectAll("." + keys[i]).style("opacity", 0.1)
+            }
+          }
+
 
           })
           .on("mouseout", function(d) {
             d3.select(".label-" + d).style("font-weight", 300).style("text-decoration", "none");
-            graphsvg.selectAll("." + d).style("stroke", color(d))
+            for (var i = 0; i < keys.length; i++) {
+              if (keys[i] !== d) {
+                graphsvg.selectAll("." + keys[i]).style("opacity", 1)
+              }
+            }
           })
           .attr("cx", 100)
           .attr("cy", function(d,i){ return (i+1)*25}) // 100 is where the first dot appears. 25 is the distance between dots
@@ -476,16 +486,64 @@
           .style("text-transform", "lowercase")
           .on("mouseover", function(d) {
              d3.select(this).style("font-weight", 900).style("text-decoration", "underline").style("cursor","default");
-            graphsvg.selectAll("." + d).style("stroke", "white")
+            for (var i = 0; i < keys.length; i++) {
+              if (keys[i] !== d) {
+                graphsvg.selectAll("." + keys[i]).style("opacity", 0.3)
+              }
+            }
           })
           .on("mouseout", function(d) {
             d3.select(this).style("font-weight", 300).style("text-decoration", "none");
-            graphsvg.selectAll("." + d).style("stroke", color(d))
+            for (var i = 0; i < keys.length; i++) {
+              if (keys[i] !== d) {
+                graphsvg.selectAll("." + keys[i]).style("opacity", 1)
+              }
+            }
           });
-      
-      // legend for the winner / nominee circles
-      var legendCircleRadii = [15, 40]
-      var legendCircleLabels = [{y: 300, text: "Winners"}, {y: 270, text: "Nominees"}]
+    var legendCircleLabels = [{y: 300, text: "Winners"}, {y: 270, text: "Nominees"}]
+          legendsvg.selectAll('legendCircleLines')
+                  .data(legendCircleLabels)
+                  .enter()
+                  .append('line')
+                  .style("stroke", "#F8F9FA")
+                  .style("stroke-width", 2)
+                  .attr("x1", 120)
+                  .attr("y1", d => d.y)
+          .attr("x2", 180)
+                  .attr("y2", d => d.y);
+
+          legendsvg.selectAll('legendCircleLines')
+                  .data(legendCircleLabels)
+                  .enter()
+                  .append('text')
+                  .attr("x", 190)
+                  .attr("y", d => d.y) // 100 is where the first dot appears. 25 is the distance between dots
+          .text(d => d.text)
+          .attr("text-anchor", "left")
+                  .style("alignment-baseline", "middle")
+                  .style("fill", "#b8b8b8")
+                  .style("font-family", "Didact Gothic")
+                  .style("text-transform", "lowercase")
+            .attr("class", function(d){return "label-" + d.text} )
+            .on("mouseover", function(d) {
+              d3.select(this).style("font-weight", 900).style("text-decoration", "underline").style("cursor","default");
+              if (d == legendCircleLabels[0]) {
+                graphsvg.selectAll(".FALSE").style("opacity", 0.3)
+              }
+              else {
+                graphsvg.selectAll(".TRUE").style("opacity", 0.3)
+              }
+
+            })
+            .on("mouseout", function(d) {
+              graphsvg.selectAll(".TRUE, .FALSE").style("opacity", 1)
+              d3.select(this).style("font-weight", 300).style("text-decoration", "none");
+            });
+
+
+    // legend for the winner / nominee circles
+      var legendCircleRadii = [50,20]
+
       legendsvg.selectAll('legendCircles')
         .data(legendCircleRadii)
         .enter()
@@ -497,30 +555,23 @@
           .style("stroke","#b8a22a")
           .style("stroke-width", 8)
           .attr("opacity", .2)
+            .on("mouseover", function(d) {
+              if (d == legendCircleRadii[0]) {
+                graphsvg.selectAll(".TRUE").style("opacity", 0.3)
+                d3.select(".label-" + legendCircleLabels[1].text).style("font-weight", 900).style("text-decoration", "underline").style("cursor","default");
+              }
+              else {
+                graphsvg.selectAll(".FALSE").style("opacity", 0.3)
+                d3.select(".label-" + legendCircleLabels[0].text).style("font-weight", 900).style("text-decoration", "underline").style("cursor","default");
+              }
+
+            })
+            .on("mouseout", function(d) {
+              graphsvg.selectAll(".TRUE, .FALSE").style("opacity", 1)
+              d3.select(".label-" + legendCircleLabels[0].text).style("font-weight", 300).style("text-decoration", "none");
+              d3.select(".label-" + legendCircleLabels[1].text).style("font-weight", 300).style("text-decoration", "none");
+            });
       // draw the lines that label the winner and nominee legend circles
-      legendsvg.selectAll('legendCircleLines')
-        .data(legendCircleLabels)
-        .enter()
-        .append('line')
-          .style("stroke", "#F8F9FA")
-          .style("stroke-width", 2)
-          .attr("x1", 120)
-          .attr("y1", d => d.y)
-          .attr("x2", 180)
-          .attr("y2", d => d.y);
-      
-      legendsvg.selectAll('legendCircleLines')
-        .data(legendCircleLabels)
-        .enter()
-        .append('text')
-          .attr("x", 190)
-          .attr("y", d => d.y) // 100 is where the first dot appears. 25 is the distance between dots
-          .text(d => d.text)
-          .attr("text-anchor", "left")
-          .style("alignment-baseline", "middle")
-          .style("fill", "#b8b8b8")
-          .style("font-family", "Didact Gothic")
-          .style("text-transform", "lowercase")
 
 
       let categories = [actorCategory, actressCategory, actorSupCategory, actressSupCategory, directorCategory]
