@@ -220,8 +220,7 @@
         return map;
       }, {})
 
-      var winnerData = filteredData.filter(d => d.winner === "TRUE" && d.year_ceremony >= startYear && d.year_ceremony <= endYear);
-      var numWinners = winnerData.length;
+      var numWinners = categories.length * (endYear - startYear + 1) 
 
       // we position the nominees in a 1 layer ring, and the physics
       // simulation will take care of repelling the overlaps
@@ -286,6 +285,9 @@
           data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
           data[i].level = "Nominee"
           nomineeCounter[data[i].category] += 1
+          if (data[i].category == "ACTOR IN A LEADING ROLE") {
+            console.log('calculating position', data[i].x, data[i].y, nomineeRadius, data[i].x - width/2, data[i].y - height/2)
+          }
         } else {
           // if there is only one winner in the filtered data, display it in the center
           if (categories.length == 1 && winnerDataByCategory[data[i].category].length == 1) {
@@ -383,7 +385,7 @@
       node.join(
         enter => enter.append("circle")
           .attr("class", function(d){return "graph-circle " + d.fixed_race + " " + d.winner})
-          .attr("r", 1)
+          .attr("r", 2)
           .attr("cx", width / 2)
           .attr("cy", height / 2)
           .style("fill", d => color(d.fixed_race))
@@ -408,7 +410,7 @@
         update => update.attr("r", d => {
             // if the datapoint is within range, it has a radius of 2. otherwise, we hide it with radius 0
             if (d.year_ceremony >= startYear && d.year_ceremony <= endYear && categories.includes(d.category)) {
-              return 1.5
+              return 2
             }
             return 0
           }),
