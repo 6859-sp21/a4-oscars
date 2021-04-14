@@ -280,14 +280,14 @@
         // if we're looking at a nominee
         if (data[i].winner === "FALSE") {
           // calculate angle of the dot
-          var theta = offsetAngle + (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (nomineeCounter[data[i].category] / nomineeDataByCategory[data[i].category].length)
+          let theta = offsetAngle + (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (nomineeCounter[data[i].category] / nomineeDataByCategory[data[i].category].length)
+          // if (categories.length == 1 && nomineeDataByCategory[data[i].category].length == 1) {
+          //   theta = 0
+          // }
           data[i].x = nomineeRadius * Math.cos(theta) + width / 2;
           data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
           data[i].level = "Nominee"
           nomineeCounter[data[i].category] += 1
-          if (data[i].category == "ACTOR IN A LEADING ROLE") {
-            console.log('calculating position', data[i].x, data[i].y, nomineeRadius, data[i].x - width/2, data[i].y - height/2)
-          }
         } else {
           // if there is only one winner in the filtered data, display it in the center
           if (categories.length == 1 && winnerDataByCategory[data[i].category].length == 1) {
@@ -638,10 +638,15 @@
 
         update(csv_data, newRange.begin, newRange.end, categories)
         
-        var winners = newData.filter(d => d.winner == "TRUE");
-        var nominees = newData.filter(d => d.winner == "FALSE")
-        simulationCircle.nodes(winners).alpha(0.1).alphaTarget(0).restart()
-        simulationRing.nodes(nominees).alpha(0.1).alphaTarget(0).restart()
+        let winners = newData.filter(d => d.winner == "TRUE");
+        let nominees = newData.filter(d => d.winner == "FALSE")
+        if (newRange.end < 1938) {
+          simulationCircle.nodes(winners.filter(d => d.categoryID ==  4 || d.categoryID == 5)).alpha(0.01).alphaTarget(0).restart()
+          simulationRing.nodes(nominees.filter(d => d.categoryID ==  4 || d.categoryID == 5)).alpha(0.01).alphaTarget(0).restart()
+        } else {
+          simulationCircle.nodes(winners).alpha(0.01).alphaTarget(0).restart()
+          simulationRing.nodes(nominees).alpha(0.01).alphaTarget(0).restart()
+        }
       });
 
       slider.range(1928, 2019);
@@ -696,8 +701,8 @@
           var newData = getData(slider.range().begin, slider.range().end).filter(d => categories.includes(d.category))
           var winners = newData.filter(d => d.winner == "TRUE");
           var nominees = newData.filter(d => d.winner == "FALSE")
-          simulationCircle.nodes(winners).alpha(0.1).alphaTarget(0).restart()
-          simulationRing.nodes(nominees).alpha(0.1).alphaTarget(0).restart()
+          simulationCircle.nodes(winners).alpha(0.01).alphaTarget(0).restart()
+          simulationRing.nodes(nominees).alpha(0.01).alphaTarget(0).restart()
         }
       }
       document.getElementById("all-btn").addEventListener("click", handleCategoryChange("all"))
