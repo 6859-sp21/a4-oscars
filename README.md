@@ -1,6 +1,7 @@
 # 6.859 A4: Oscars
 
 Jenning Chen, Ashwin Srinivasan, Lisa Yoo
+
 [Link to our visualization](https://6859-sp21.github.io/a4-oscars/)
 
 ## Background
@@ -34,5 +35,7 @@ Jenning assembled the dataset via web scraping, worked on the concentric circles
 
 ## Resources Used
 D3 Circular packing reference: [https://www.d3-graph-gallery.com/graph/circularpacking_basic.html](https://www.d3-graph-gallery.com/graph/circularpacking_basic.html)
+
 Data retrieved from: [https://data.world/crowdflower/academy-awards-demographics](https://data.world/crowdflower/academy-awards-demographics)
+
 Image from: [https://www.flaticon.com/free-icon/oscar_206982](https://www.flaticon.com/free-icon/oscar_206982)
