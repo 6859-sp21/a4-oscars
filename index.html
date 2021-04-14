@@ -131,7 +131,8 @@
         <br />
         <i>
           Adapted from: https://www.d3-graph-gallery.com/graph/circularpacking_basic.html, 4/3/2021 <br>
-          Data retrieved from: https://data.world/crowdflower/academy-awards-demographics
+          Data retrieved from: https://data.world/crowdflower/academy-awards-demographics <br>
+          Image from: https://www.flaticon.com/free-icon/oscar_206982
         </i>
       </div>
     </div>
@@ -194,6 +195,13 @@
       .style("fill", "#1d1c1c")
       .attr("height", 20000)
       .attr("width", 20000)
+    var myimage = graphgElem.append('image')
+      .attr('xlink:href', './oscar_man.png')
+      .attr('width', 200)
+      .attr('height', 200)
+      .attr('x', width / 2 + 1010)
+      .attr('y', height / 2 + 650)
+      .attr('transform', 'scale(0.35)')
 
     var legendsvg = d3.select("#legend")
       .append("svg")
