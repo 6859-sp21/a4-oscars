@@ -77,6 +77,7 @@
       /* so the graph doesn't go outside of the container on zoom */
       overflow: hidden;
       padding-top: 30px;
+      cursor: pointer;
     }
 
     .sources {
@@ -90,6 +91,18 @@
       transform: translate(75px, 150px);
     }
 
+    div.tooltip {	
+      position: absolute;			
+      text-align: left;			
+      /* width: 60px;					
+      height: 28px;					 */
+      font: 16px "Didact Gothic";		
+      background: lightskyblue;	
+      border: 0px;		
+      border-radius: 7px;
+      padding: 3px;			
+      pointer-events: none;			
+    }
   </style>
 </head>
 <body>
@@ -178,15 +191,10 @@
         .attr("transform", "translate(0, 200)"); // pushes viz to right + up
     legendsvg.append("g");
 
-    var tooltip = d3.select("#main")
-      .append("div")
-      .style("position", "absolute")
-      .style("visibility", "hidden")
-      .style("background", "lightskyblue")
-      .style("font-family", "'Didact Gothic', sans-serif")
-      .style("font-size", "16px")
-      .style("border-radius", "7px")
-      .style("padding", "3px")
+    // Define the div for the tooltip
+    var tooltipDiv = d3.select("body").append("div")	
+        .attr("class", "tooltip")				
+        .style("opacity", 0);
 
     function update(data, startYear, endYear, categories) {  
       // first, filter data to year range
@@ -371,22 +379,21 @@
           .style("opacity", 1)
           .attr("stroke", d => color(d.fixed_race))
           .style("stroke-width", 0.5)
-          .on("mouseover", function(){
-              d3.select(this).style("stroke", "white")
-              tooltip 
-              .style("visibility", "visible")
-              })
-          .on("mousemove", function(d){
-              tooltip
-              .style("top", (d3.event.pageY - 85) + "px")
-              .style("left", (d3.event.pageX -475) + "px")
-              .html("Name: " + d.name + "<br>Film: " + d.film + "<br>Year: " + d.year_ceremony)
-              })
-          .on("mouseout", function(d){
+          .on("mouseover", function(d) {
+            d3.select(this).style("stroke", "white")
+            tooltipDiv.transition()		
+                .duration(200)		
+                .style("opacity", .9);		
+            tooltipDiv	.html("Name: " + d.name + "<br>Film: " + d.film + "<br>Year: " + d.year_ceremony)	
+                .style("left", (d3.event.pageX + 10) + "px")		
+                .style("top", (d3.event.pageY - 28) + "px");	
+            })					
+            .on("mouseout", function(d) {
               d3.select(this).style("stroke", color(d.fixed_race))
-              tooltip
-              .style("visibility", "hidden")
-              }),
+                tooltipDiv.transition()		
+                    .duration(500)		
+                    .style("opacity", 0);	
+            }),
         update => update.attr("r", d => {
             // if the datapoint is within range, it has a radius of 2. otherwise, we hide it with radius 0
             if (d.year_ceremony >= startYear && d.year_ceremony <= endYear && categories.includes(d.category)) {
