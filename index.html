@@ -213,6 +213,7 @@
       .attr('xlink:href', './oscar_man.png')
       .attr('width', 200)
       .attr('height', 200)
+      .attr('opacity', 0.4)
       .attr('x', width / 2 + 1010)
       .attr('y', height / 2 + 650)
       .attr('transform', 'scale(0.35)')
@@ -314,25 +315,20 @@
         // if we're looking at a nominee
         if (data[i].winner === "FALSE") {
           // calculate angle of the dot
-          let theta = offsetAngle + (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (nomineeCounter[data[i].category] / nomineeDataByCategory[data[i].category].length)
-          // if (categories.length == 1 && nomineeDataByCategory[data[i].category].length == 1) {
-          //   theta = 0
-          // }
+          let theta = offsetAngle + (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (nomineeCounter[data[i].category] / nomineeDataByCategory[data[i].category].length) + (arcAngle / nomineeDataByCategory[data[i].category].length) / 2
           data[i].x = nomineeRadius * Math.cos(theta) + width / 2;
           data[i].y = nomineeRadius * Math.sin(theta) + height / 2;
           data[i].level = "Nominee"
           nomineeCounter[data[i].category] += 1
         } else {
-          // if there is only one winner in the filtered data, display it in the center
-          if (categories.length == 1 && winnerDataByCategory[data[i].category].length == 1) {
-            data[i].x = width / 2
-            data[i].y = height / 2
-          } else {
-            var theta = offsetAngle + (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (winnerCounter[data[i].category] / winnerDataByCategory[data[i].category].length)
-            data[i].x = winnerRadius * Math.cos(theta) + width / 2;
-            data[i].y = winnerRadius * Math.sin(theta) + height / 2;
+          var theta = offsetAngle + (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle * (winnerCounter[data[i].category] / winnerDataByCategory[data[i].category].length) + (arcAngle / winnerDataByCategory[data[i].category].length) / 2
+          if (winnerDataByCategory[data[i].category].length == 1) {
+            theta = offsetAngle + (sectorSeparation + arcAngle) * categories.indexOf(data[i].category) + arcAngle / 2
           }
+          data[i].x = winnerRadius * Math.cos(theta) + width / 2;
+          data[i].y = winnerRadius * Math.sin(theta) + height / 2;
           data[i].level = "Winner"
+          console.log(data[i].x, data[i].y)
           winnerCounter[data[i].category] += 1
         }
       }
@@ -674,12 +670,15 @@
         
         let winners = newData.filter(d => d.winner == "TRUE");
         let nominees = newData.filter(d => d.winner == "FALSE")
-        if (newRange.end < 1938) {
-          simulationCircle.nodes(winners.filter(d => d.categoryID ==  4 || d.categoryID == 5)).alpha(0.01).alphaTarget(0).restart()
-          simulationRing.nodes(nominees.filter(d => d.categoryID ==  4 || d.categoryID == 5)).alpha(0.01).alphaTarget(0).restart()
+        
+        if (newRange.end < 1938 && (categories.includes("ACTOR IN A SUPPORTING ROLE") || categories.includes("ACTRESS IN A SUPPORTING ROLE"))) {
+          simulationCircle.nodes(winners.filter(d => d.categoryID ==  4 || d.categoryID == 5)).alpha(0.005).alphaTarget(0).restart()
+          simulationRing.nodes(nominees.filter(d => d.categoryID ==  4 || d.categoryID == 5)).alpha(0.005).alphaTarget(0).restart()
         } else {
-          simulationCircle.nodes(winners).alpha(0.01).alphaTarget(0).restart()
-          simulationRing.nodes(nominees).alpha(0.01).alphaTarget(0).restart()
+          let alpha = Math.min(0.003, Math.max(0, 0.00045*winners.length - 0.015))
+          console.log('alpha', alpha)
+          simulationCircle.nodes(winners).alpha(alpha).alphaTarget(0).restart()
+          simulationRing.nodes(nominees).alpha(alpha).alphaTarget(0).restart()
         }
       });
 
@@ -735,9 +734,17 @@
           var newData = getData(slider.range().begin, slider.range().end).filter(d => categories.includes(d.category))
           var winners = newData.filter(d => d.winner == "TRUE");
           var nominees = newData.filter(d => d.winner == "FALSE")
-          simulationCircle.nodes(winners).alpha(0.01).alphaTarget(0).restart()
-          simulationRing.nodes(nominees).alpha(0.01).alphaTarget(0).restart()
+          let alpha = Math.min(0.003, Math.max(0, 0.0005*winners.length - 0.01))
+          // If there are multiple categories and they include supporting categories, do not 
+          // have alpha if the number of winners per category is under 18.
+          if (categories.length > 1 && winners.length < 20 && (categories.includes("ACTOR IN A SUPPORTING ROLE") || categories.includes("ACTRESS IN A SUPPORTING ROLE"))) {
+            alpha = 0
+          }
+          console.log('alpha', alpha)
+          simulationCircle.nodes(winners).alpha(alpha).alphaTarget(0).restart()
+          simulationRing.nodes(nominees).alpha(alpha).alphaTarget(0).restart()
         }
+          
       }
       document.getElementById("all-btn").addEventListener("click", handleCategoryChange("all"))
       document.getElementById("actor-btn").addEventListener("click", handleCategoryChange(actorCategory))
