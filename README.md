@@ -36,6 +36,7 @@ Jenning assembled the dataset via web scraping, worked on the concentric circles
 ## Resources Used
 D3 Circular packing reference: [https://www.d3-graph-gallery.com/graph/circularpacking_basic.html](https://www.d3-graph-gallery.com/graph/circularpacking_basic.html)
 
-Data retrieved from: [https://data.world/crowdflower/academy-awards-demographics](https://data.world/crowdflower/academy-awards-demographics)
+Data retrieved from: [https://data.world/crowdflower/academy-awards-demographics](https://data.world/crowdflower/academy-awards-demographics), 
+[Academy Awards website](http://awardsdatabase.oscars.org/), and Wikipedia: [1](https://en.wikipedia.org/wiki/List_of_black_Academy_Award_winners_and_nominees), [2](https://en.wikipedia.org/wiki/List_of_Hispanic_Academy_Award_winners_and_nominees), [3](https://en.wikipedia.org/wiki/List_of_Asian_Academy_Award_winners_and_nominees).
 
 Image from: [https://www.flaticon.com/free-icon/oscar_206982](https://www.flaticon.com/free-icon/oscar_206982)
