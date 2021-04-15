@@ -84,6 +84,7 @@
     .sources {
       color: white;
       position: absolute;
+      font-size: 12px;
       bottom: 20px;
     }
 
@@ -99,7 +100,7 @@
     
     .stats {
       color: white;
-      font-size: 12px;
+      font-size: 15px;
     }
 
     div.tooltip {	
@@ -129,23 +130,25 @@
       <div class="caption p-3">
         Inspired by the <a href="https://time.com/3669143/oscars-2015-nominations-white/" style="color: #E6AB02;">#OscarsSoWhite</a> movement in 2015, this visualization explores the distribution of race and ethnicity among all Oscars winners and nominees.
         Adjust the year and categories to see how diversity has (or has not) changed over the years.
-        <br/> <br/>
+        <br/> <br/> <br/> <br/>
         Based on the current selections, from <a id="year_start"></a> to <a id="year_end"></a>, the race breakdown is as follows:
       </div>
       <div class="stats" style="color:white; margin-left: 40px">
-        <a id="white_nominees" style="color: white; font-size: 24px;"></a> &emsp; white nominees (excluding winners)
+        <a id="white_nominees" style="color: white; font-size: 28px;"></a> &emsp; white nominees (excluding winners)
         <br/>
-        <a id="white_winners" style="color: white; font-size: 24px;"></a> &emsp; white winners
+        <a id="white_winners" style="color: white; font-size: 28px;"></a> &emsp; white winners
         <br/>
         <!-- <a id="white" style="color: white;"></a> US white population average in <a id="years" style="color: white"></a> -->
       </div>
       <div class="sources p-3">
-        Authors: Jenning Chen, Ashwin Srinivasan, Lisa Yoo
-        <br />
+        <b>Authors: Jenning Chen, Ashwin Srinivasan, Lisa Yoo</b>
+        <br/> <br/>
         <i>
-          Adapted from: https://www.d3-graph-gallery.com/graph/circularpacking_basic.html, 4/3/2021 <br>
-          Data retrieved from: https://data.world/crowdflower/academy-awards-demographics <br>
-          Image from: https://www.flaticon.com/free-icon/oscar_206982
+          Adapted from: <a href="https://www.d3-graph-gallery.com/graph/circularpacking_basic.html">D3 Circle-Packing Tutorial</a> <br>
+          Data from: <a href="https://data.world/crowdflower/academy-awards-demographics">Oscars Demographics</a>, 
+          <a href="http://awardsdatabase.oscars.org/">Academy Awards Database</a>,
+          <a href="https://en.wikipedia.org/wiki/List_of_black_Academy_Award_winners_and_nominees">Wikipedia</a> <br>
+          Image from: <a href="https://www.flaticon.com/free-icon/oscar_206982">source</a>
         </i>
       </div>
       
